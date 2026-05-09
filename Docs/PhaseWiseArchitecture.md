@@ -1,4 +1,4 @@
-# Phase-wise architecture (Final, completed Phases 0–6)
+# Phase-wise architecture (Final, completed Phases 0–7)
 
 Companion to [ProblemStatement.md](./ProblemStatement.md).  
 This file now reflects the **implemented system**, not a forward roadmap.  
@@ -95,7 +95,7 @@ flowchart TD
 5. Phase 5 asks LLM to return grounded ranked picks (`top_k`, default **5**, max **5**).
 6. If LLM fails or key is missing, fallback ranking/explanations are returned.
 
-## Phase completion record
+## Completed phases (0–7)
 
 ## Phase 0 — Charter + dataset spike
 
@@ -135,6 +135,8 @@ flowchart TD
 - `load_materialized_split(...)` (**full split in memory**, non-streaming)
 
 **Outcome used by later phases:** single source for all HF reads; local HF cache reuse across runs.
+
+**Dependency note:** `zomato-raw-ingest` requires **`datasets>=4.4.0`** so environments on **Python 3.14** (e.g. Streamlit Community Cloud) do not hit legacy fingerprint/pickle failures inside `datasets` when loading builders.
 
 ---
 
@@ -200,10 +202,11 @@ flowchart TD
 **Implemented objective:** add a deployment-friendly UI/runtime target using Streamlit for rapid public hosting.
 
 **Delivered:** [`streamlit_app.py`](../streamlit_app.py) + [`phase7/README.md`](../phase7/README.md)  
-- Streamlit app shell for preference input + recommendation rendering
-- API/client wiring to reuse existing recommendation pipeline  
-- Environment-based key handling (`OPENAI_API_KEY` / `GROQ_API_KEY` / `HF_TOKEN`)  
-- Root [`requirements.txt`](../requirements.txt) for Streamlit Community Cloud (installs `pydantic`, `datasets`, `openai`, etc.)
+- Streamlit app shell for preference input + recommendation rendering (same pipeline as Phase 6: catalog → filter → shortlist → LLM)
+- Imports Phase 2–6 source trees via `sys.path` in `streamlit_app.py` (no separate HTTP hop)
+- **Streamlit Community Cloud:** root [`requirements.txt`](../requirements.txt) is required so the builder installs **`pydantic`**, **`datasets`**, **`huggingface_hub`**, **`openai`**, and **`streamlit`** (cloud does not install phase `pyproject.toml` extras by default)
+- **`datasets>=4.4.0`** in that file (and in [`phase2/pyproject.toml`](../phase2/pyproject.toml)) avoids **Python 3.14** breakage during dataset cache fingerprinting (`pickle` / `dill` path); alternatively set **Python 3.12** under deploy **Advanced settings**
+- **Secrets on cloud:** configure `OPENAI_API_KEY`, **`GROQ_API_KEY`**, and optional **`HF_TOKEN`** in the app’s Streamlit secrets UI (local dev still uses `phase6/.env` via `run.ps1 -Surface` or manual export)
 
 **Outcome:** optional no-server-ops deployment path for demos and lightweight production usage.
 
@@ -223,6 +226,7 @@ phase6 (surface)
 
 - **Primary run path (single-port mode):** `.\run.ps1 -Surface`
 - **Single canonical URL:** `http://127.0.0.1:8765/` (UI + API from same process)
+- **Phase 7 (Streamlit):** from repo root, `pip install -r requirements.txt` then `streamlit run streamlit_app.py`; first catalog load pulls the full HF split (same as Phase 6 cold start)
 - **Environment loading:** `run.ps1 -Surface` loads `phase5/.env` then **`phase6/.env`** (phase6 overrides)
 - **Live LLM (backend → provider):** `OPENAI_API_KEY` and/or **`GROQ_API_KEY`** (see `zomato_llm.config`); when provider limits or key issues occur, the app returns smart local fallback explanations
 - **Optional for better HF rate limits:** `HF_TOKEN`
