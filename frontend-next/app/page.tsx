@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import LlmStatusBadge from "@/components/LlmStatusBadge";
 import PreferencesForm from "@/components/PreferencesForm";
 import ResultCard from "@/components/ResultCard";
-import { getFilterOptions, recommend } from "@/lib/api";
+import { getApiBase, getFilterOptions, recommend } from "@/lib/api";
 import {
-  FilterOptionsResponse,
+  FilterOptionsResponseOk,
   RecommendRequestBody,
   RecommendResponse,
 } from "@/lib/types";
 
 export default function HomePage() {
-  const [options, setOptions] = useState<FilterOptionsResponse | null>(null);
+  const [options, setOptions] = useState<FilterOptionsResponseOk | null>(null);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +67,7 @@ export default function HomePage() {
             (grounded).
           </p>
           <p className="ver">
-            Frontend on Next.js · Backend expected at 127.0.0.1:8765 · LLM{" "}
+            Frontend on Next.js · API: {getApiBase()} · LLM{" "}
             <LlmStatusBadge
               usedLlm={llmUsed}
               fallbackReason={result?.fallback_reason}
@@ -125,11 +125,11 @@ export default function HomePage() {
       </main>
 
       <footer className="footer">
-        <a href="http://127.0.0.1:8765/docs" target="_blank" rel="noreferrer">
+        <a href={`${getApiBase()}/docs`} target="_blank" rel="noreferrer">
           API docs
         </a>{" "}
         ·{" "}
-        <a href="http://127.0.0.1:8765/api/health" target="_blank" rel="noreferrer">
+        <a href={`${getApiBase()}/api/health`} target="_blank" rel="noreferrer">
           health
         </a>
       </footer>

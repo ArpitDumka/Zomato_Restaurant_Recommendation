@@ -1,10 +1,14 @@
 "use client";
 
 import { FormEvent } from "react";
-import { BudgetBand, FilterOptionsResponse, RecommendRequestBody } from "@/lib/types";
+import {
+  BudgetBand,
+  FilterOptionsResponseOk,
+  RecommendRequestBody,
+} from "@/lib/types";
 
 type Props = {
-  options: FilterOptionsResponse | null;
+  options: FilterOptionsResponseOk | null;
   loadingOptions: boolean;
   submitting: boolean;
   onSubmit: (body: RecommendRequestBody) => void;

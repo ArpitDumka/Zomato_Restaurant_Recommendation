@@ -1,7 +1,7 @@
 export type BudgetBand = "low" | "medium" | "high" | "unknown";
 
-export type FilterOptionsResponse = {
-  ok: boolean;
+export type FilterOptionsResponseOk = {
+  ok: true;
   cities: string[];
   cuisines: string[];
   min_ratings: number[];
@@ -11,6 +11,10 @@ export type FilterOptionsResponse = {
   normalized_row_count: number;
   scan_seconds: number;
 };
+
+export type FilterOptionsResponse =
+  | FilterOptionsResponseOk
+  | { ok: false; error?: string; traceback?: string };
 
 export type RecommendRequestBody = {
   city: string | null;

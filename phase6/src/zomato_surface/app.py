@@ -82,9 +82,19 @@ def create_app() -> FastAPI:
             default=False,
             description="Re-scan full split (drops cache)",
         ),
-    ) -> dict:
-        snap = get_filter_options(force_refresh=refresh)
-        return filter_options_response_dict(snap)
+    ) -> JSONResponse:
+        try:
+            snap = get_filter_options(force_refresh=refresh)
+            return JSONResponse(filter_options_response_dict(snap))
+        except Exception as e:  # noqa: BLE001
+            return JSONResponse(
+                {
+                    "ok": False,
+                    "error": str(e),
+                    "traceback": traceback.format_exc(),
+                },
+                status_code=200,
+            )
 
     @app.get("/api/health")
     def health() -> dict:
