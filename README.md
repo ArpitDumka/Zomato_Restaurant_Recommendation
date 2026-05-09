@@ -13,7 +13,7 @@ AI-assisted restaurant discovery using the [ManikaSaini/zomato-restaurant-recomm
 | **4** | Done — filters + cap (`zomato-filter`) | `pip install -e ./phase3` then `pip install -e ./phase4` (see [phase4/README.md](phase4/README.md)) |
 | **5** | Done — LLM layer (`zomato-llm`) | After phases 3–4: `pip install -e ./phase5` + `OPENAI_API_KEY` ([phase5/README.md](phase5/README.md)) |
 | **6** | Done — product UI/API (`zomato-surface`) | Install phases 2–5 then `pip install -e ./phase6` ([phase6/README.md](phase6/README.md)) |
-| **7** | Done — Streamlit deployment surface | `pip install -r requirements.txt` then `streamlit run streamlit_app.py` ([phase7/README.md](phase7/README.md)) |
+| **7** | Done — Streamlit deployment surface | `.\run.ps1 -Streamlit` or `pip install -r requirements.txt` then `streamlit run streamlit_app.py` ([phase7/README.md](phase7/README.md)) |
 
 **Full pipeline app (single URL, Phase 6)** — filters, cap, grounded LLM top-K (set API key for real explanations):
 

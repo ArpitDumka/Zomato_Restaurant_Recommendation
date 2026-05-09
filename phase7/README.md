@@ -8,7 +8,15 @@ This phase adds a Streamlit app that reuses the existing recommendation pipeline
 
 ## Local run
 
-From repo root, install dependencies (matches Streamlit Cloud):
+From repo root on Windows (venv, phases 2–6, `requirements.txt`, loads `phase6\.env` when present):
+
+```powershell
+.\run.ps1 -Streamlit
+```
+
+Open **http://127.0.0.1:8501/**.
+
+Manual install (matches Streamlit Cloud):
 
 ```powershell
 pip install -r requirements.txt
@@ -16,6 +24,8 @@ streamlit run streamlit_app.py
 ```
 
 For a dev setup with editable phase packages instead, ensure `streamlit`, `pydantic`, `datasets`, `huggingface_hub`, and `openai` are installed, then run the same `streamlit` command.
+
+The repo includes [`.streamlit/config.toml`](../.streamlit/config.toml) (`gatherUsageStats = false`). On the very first Streamlit run, if you still see an email prompt in the terminal, press Enter once or use `.\run.ps1 -Streamlit` (it pipes a blank line for non-interactive starts).
 
 ## Streamlit Community Cloud
 

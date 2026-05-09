@@ -1,0 +1,6 @@
+# Project defaults so `streamlit run` does not block on first-run prompts (e.g. email / telemetry).
+[browser]
+gatherUsageStats = false
+
+[server]
+address = "127.0.0.1"
