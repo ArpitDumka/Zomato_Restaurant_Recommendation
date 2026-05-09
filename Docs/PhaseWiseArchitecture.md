@@ -1,4 +1,4 @@
-# Phase-wise architecture (Final, completed Phases 0–7)
+# Phase-wise architecture (Phases 0–6 + optional Render/Vercel deploy)
 
 Companion to [ProblemStatement.md](./ProblemStatement.md).  
 This file now reflects the **implemented system**, not a forward roadmap.  
@@ -12,7 +12,7 @@ The shipped product is a **single Python process**: a **FastAPI backend** that s
 
 | Layer | Role | Location (repo) |
 | --- | --- | --- |
-| **HTTP / routing** | FastAPI app, CORS not required for same-origin UI | [`phase6/src/zomato_surface/app.py`](../phase6/src/zomato_surface/app.py) |
+| **HTTP / routing** | FastAPI app; CORS for same-origin UI + optional Next.js (`CORS_ORIGINS` / `CORS_ORIGIN_REGEX` on hosts) | [`phase6/src/zomato_surface/app.py`](../phase6/src/zomato_surface/app.py) |
 | **Recommendation orchestration** | Preferences → filter → shortlist → LLM | [`phase6/src/zomato_surface/service.py`](../phase6/src/zomato_surface/service.py) |
 | **Data catalog** | One-time HF materialize + normalize; in-memory cache | [`phase6/src/zomato_surface/catalog.py`](../phase6/src/zomato_surface/catalog.py) |
 | **Filter options API** | Distinct cities/cuisines/ratings/budgets from catalog | [`phase6/src/zomato_surface/filter_options.py`](../phase6/src/zomato_surface/filter_options.py) |
@@ -67,7 +67,7 @@ flowchart LR
   P3 --> P4["Phase 4<br/>Deterministic filter/rank"]
   P4 --> P5["Phase 5<br/>LLM rank + explanation"]
   P5 --> P6["Phase 6<br/>Backend (FastAPI) + frontend (HTML/JS)"]
-  P6 --> P7["Phase 7<br/>Deployment surface (Streamlit)"]
+  P6 --> P7["Deploy (optional)<br/>Render API + Vercel Next.js"]
 ```
 
 ## End-to-end runtime architecture (current)
@@ -95,7 +95,7 @@ flowchart TD
 5. Phase 5 asks LLM to return grounded ranked picks (`top_k`, default **5**, max **5**).
 6. If LLM fails or key is missing, fallback ranking/explanations are returned.
 
-## Completed phases (0–7)
+## Completed implementation phases (0–6)
 
 ## Phase 0 — Charter + dataset spike
 
@@ -136,7 +136,7 @@ flowchart TD
 
 **Outcome used by later phases:** single source for all HF reads; local HF cache reuse across runs.
 
-**Dependency note:** `zomato-raw-ingest` requires **`datasets>=4.4.0`** so environments on **Python 3.14** (e.g. Streamlit Community Cloud) do not hit legacy fingerprint/pickle failures inside `datasets` when loading builders.
+**Dependency note:** `zomato-raw-ingest` requires **`datasets>=4.4.0`** so **Python 3.14** runtimes do not hit legacy fingerprint/pickle failures inside `datasets` when loading builders.
 
 ---
 
@@ -197,18 +197,17 @@ flowchart TD
 
 ---
 
-## Phase 7 — Deployment surface (Streamlit)
+## Production deployment (Render + Vercel)
 
-**Implemented objective:** add a deployment-friendly UI/runtime target using Streamlit for rapid public hosting.
+**Objective:** host the **FastAPI** service separately from the optional **Next.js** client.
 
-**Delivered:** [`streamlit_app.py`](../streamlit_app.py) + [`phase7/README.md`](../phase7/README.md)  
-- Streamlit app shell for preference input + recommendation rendering (same pipeline as Phase 6: catalog → filter → shortlist → LLM)
-- Imports Phase 2–6 source trees via `sys.path` in `streamlit_app.py` (no separate HTTP hop)
-- **Streamlit Community Cloud:** root [`requirements.txt`](../requirements.txt) is required so the builder installs **`pydantic`**, **`datasets`**, **`huggingface_hub`**, **`openai`**, and **`streamlit`** (cloud does not install phase `pyproject.toml` extras by default)
-- **`datasets>=4.4.0`** in that file (and in [`phase2/pyproject.toml`](../phase2/pyproject.toml)) avoids **Python 3.14** breakage during dataset cache fingerprinting (`pickle` / `dill` path); alternatively set **Python 3.12** under deploy **Advanced settings**
-- **Secrets on cloud:** configure `OPENAI_API_KEY`, **`GROQ_API_KEY`**, and optional **`HF_TOKEN`** in the app’s Streamlit secrets UI (local dev still uses `phase6/.env` via `run.ps1 -Surface` or manual export)
+**Delivered:** [`render.yaml`](../render.yaml) (Render Blueprint) + [`frontend-next/vercel.json`](../frontend-next/vercel.json) + [`Docs/Deployment.md`](./Deployment.md)  
+- **Render:** `pip install -r requirements.txt` (editable phase installs) + `uvicorn zomato_surface.app:create_app --factory` on `$PORT`; health check `/api/health`
+- **Vercel:** project **root directory** = `frontend-next`; `NEXT_PUBLIC_API_BASE_URL` points at the Render service URL
+- **CORS:** backend reads **`CORS_ORIGINS`** (comma-separated) and optional **`CORS_ORIGIN_REGEX`** (e.g. Vercel previews) — see Deployment doc
+- **Secrets:** `OPENAI_API_KEY` / **`GROQ_API_KEY`** / optional **`HF_TOKEN`** in the Render environment (same semantics as local `phase6/.env`)
 
-**Outcome:** optional no-server-ops deployment path for demos and lightweight production usage.
+**Outcome:** split deployment while the in-repo Phase 6 Jinja UI remains available on the same Render URL at `/`.
 
 ---
 
@@ -226,7 +225,8 @@ phase6 (surface)
 
 - **Primary run path (single-port mode):** `.\run.ps1 -Surface`
 - **Single canonical URL:** `http://127.0.0.1:8765/` (UI + API from same process)
-- **Phase 7 (Streamlit):** from repo root, `pip install -r requirements.txt` then `streamlit run streamlit_app.py`; first catalog load pulls the full HF split (same as Phase 6 cold start)
+- **Split stack (local):** Phase 6 API on `:8765` + `frontend-next` on `:3000` with `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8765`
+- **Split stack (production):** see [`Deployment.md`](./Deployment.md) — Render + Vercel; local dev **Next :3000** + **API :8765**
 - **Environment loading:** `run.ps1 -Surface` loads `phase5/.env` then **`phase6/.env`** (phase6 overrides)
 - **Live LLM (backend → provider):** `OPENAI_API_KEY` and/or **`GROQ_API_KEY`** (see `zomato_llm.config`); when provider limits or key issues occur, the app returns smart local fallback explanations
 - **Optional for better HF rate limits:** `HF_TOKEN`
@@ -243,4 +243,4 @@ phase6 (surface)
 | 4 | Deterministic relevance | Filter + shortlist ranking |
 | 5 | Language reasoning | Grounded LLM rank/explain + fallback |
 | 6 | Product delivery | **Backend** (FastAPI) + **frontend** (HTML/CSS/JS) + orchestration |
-| 7 | Deployment channel | **Streamlit** deployment surface + hosting path |
+| — | Production (optional) | **Render** (API + same-origin UI) + **Vercel** (Next.js) — [`Deployment.md`](./Deployment.md) |

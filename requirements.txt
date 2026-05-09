@@ -1,9 +1,6 @@
-# Runtime deps for Streamlit Cloud and `streamlit run streamlit_app.py` from repo root.
-# Streamlit Cloud reads this file automatically; keep it in sync with phase2/phase5/phase6 pyproject.toml.
-
-streamlit>=1.28.0
-pydantic>=2.5.0
-# 4.4+ fixes Python 3.14 pickle/dill used by fingerprinting (Streamlit Cloud may use 3.14).
-datasets>=4.4.0
-huggingface_hub>=0.20.0
-openai>=1.30.0
+# Production / Render: install all phase packages from repo root (paths relative to this file).
+-e ./phase2
+-e ./phase3
+-e ./phase4
+-e ./phase5
+-e ./phase6

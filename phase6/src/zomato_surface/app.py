@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import traceback
 from pathlib import Path
 
@@ -23,23 +24,43 @@ from zomato_surface.ui_options import LLM_CAP_OPTIONS, TOP_K_OPTIONS
 _BASE = Path(__file__).resolve().parent
 
 
+def _cors_allow_origins() -> list[str]:
+    """Local Next.js dev plus optional production origins (Render + Vercel)."""
+    base = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    extra = os.environ.get("CORS_ORIGINS", "").strip()
+    if not extra:
+        return base
+    more = [o.strip() for o in extra.split(",") if o.strip()]
+    seen: set[str] = set()
+    out: list[str] = []
+    for o in base + more:
+        if o not in seen:
+            seen.add(o)
+            out.append(o)
+    return out
+
+
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Zomato-inspired recommendations",
         description="Phase 6: full pipeline (HF -> normalize -> filter -> LLM).",
         version=__version__,
     )
-    # Allow the standalone Next.js frontend on port 3000 to call backend APIs.
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-        ],
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # Next.js on :3000 locally; set CORS_ORIGINS (comma-separated) and optional
+    # CORS_ORIGIN_REGEX on Render for Vercel (see Docs/Deployment.md).
+    _cors_kw: dict = {
+        "allow_origins": _cors_allow_origins(),
+        "allow_credentials": False,
+        "allow_methods": ["*"],
+        "allow_headers": ["*"],
+    }
+    _cors_rx = os.environ.get("CORS_ORIGIN_REGEX", "").strip()
+    if _cors_rx:
+        _cors_kw["allow_origin_regex"] = _cors_rx
+    app.add_middleware(CORSMiddleware, **_cors_kw)
     templates = Jinja2Templates(directory=str(_BASE / "templates"))
     app.mount("/static", StaticFiles(directory=str(_BASE / "static")), name="static")
 

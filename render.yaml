@@ -1,0 +1,28 @@
+# Render Blueprint — FastAPI backend (Phase 6).
+# Spec: https://render.com/docs/blueprint-spec
+# Human checklist + env semantics: Docs/Deployment.md
+#
+# Manual env (Render dashboard → Environment), optional unless noted:
+#   OPENAI_API_KEY, GROQ_API_KEY, HF_TOKEN — LLM / Hub (see Deployment.md)
+#   CORS_ORIGINS — comma-separated production origins (e.g. https://your-app.vercel.app)
+#
+# Vercel: project root directory = frontend-next; NEXT_PUBLIC_API_BASE_URL = this service URL (no trailing slash).
+
+services:
+  - type: web
+    name: zomato-recommendation-api
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn zomato_surface.app:create_app --factory --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # Matches Deployment.md; lets Vercel preview/prod *.vercel.app call the API without extra CORS setup.
+      - key: CORS_ORIGIN_REGEX
+        value: "https://[^/]+\\.vercel\\.app$"
