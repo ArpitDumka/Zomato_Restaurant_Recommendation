@@ -23,6 +23,8 @@ The repo includes a root [`requirements.txt`](../requirements.txt) so the cloud 
 
 Set secrets in the app dashboard (for example `OPENAI_API_KEY` or `GROQ_API_KEY`, and optionally `HF_TOKEN`) to match your local `.env` usage.
 
+**Python 3.14 on Community Cloud:** older `datasets` versions crash while hashing cache metadata (pickle API change). The root `requirements.txt` pins `datasets>=4.4.0` to avoid that. You can also pick **Python 3.12** under deploy **Advanced settings** if you prefer.
+
 Open the URL printed by Streamlit (usually `http://localhost:8501`).
 
 ## Notes

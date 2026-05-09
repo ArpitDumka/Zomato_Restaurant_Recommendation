@@ -3,6 +3,7 @@
 
 streamlit>=1.28.0
 pydantic>=2.5.0
-datasets>=2.16.0,<4.0.0
+# 4.4+ fixes Python 3.14 pickle/dill used by fingerprinting (Streamlit Cloud may use 3.14).
+datasets>=4.4.0
 huggingface_hub>=0.20.0
 openai>=1.30.0
