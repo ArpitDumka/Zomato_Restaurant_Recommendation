@@ -203,7 +203,7 @@ flowchart TD
 - Streamlit app shell for preference input + recommendation rendering
 - API/client wiring to reuse existing recommendation pipeline  
 - Environment-based key handling (`OPENAI_API_KEY` / `GROQ_API_KEY` / `HF_TOKEN`)  
-- Deployment-ready packaging for Streamlit-hosted environments
+- Root [`requirements.txt`](../requirements.txt) for Streamlit Community Cloud (installs `pydantic`, `datasets`, `openai`, etc.)
 
 **Outcome:** optional no-server-ops deployment path for demos and lightweight production usage.
 

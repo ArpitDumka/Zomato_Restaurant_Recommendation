@@ -8,12 +8,20 @@ This phase adds a Streamlit app that reuses the existing recommendation pipeline
 
 ## Local run
 
-From repo root (recommended after existing editable installs from earlier phases):
+From repo root, install dependencies (matches Streamlit Cloud):
 
 ```powershell
-pip install streamlit
+pip install -r requirements.txt
 streamlit run streamlit_app.py
 ```
+
+For a dev setup with editable phase packages instead, ensure `streamlit`, `pydantic`, `datasets`, `huggingface_hub`, and `openai` are installed, then run the same `streamlit` command.
+
+## Streamlit Community Cloud
+
+The repo includes a root [`requirements.txt`](../requirements.txt) so the cloud builder installs **pydantic**, **datasets**, **openai**, and related packages. Without that file, imports such as `from pydantic import ...` fail at startup.
+
+Set secrets in the app dashboard (for example `OPENAI_API_KEY` or `GROQ_API_KEY`, and optionally `HF_TOKEN`) to match your local `.env` usage.
 
 Open the URL printed by Streamlit (usually `http://localhost:8501`).
 
