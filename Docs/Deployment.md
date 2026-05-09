@@ -34,8 +34,11 @@ The Blueprint sets **`CORS_ORIGIN_REGEX`** so any **`*.vercel.app`** origin can 
 | `HF_TOKEN` | Optional; Hugging Face Hub |
 | `CORS_ORIGINS` | **For Vercel:** comma-separated origins, e.g. `https://your-app.vercel.app` |
 | `CORS_ORIGIN_REGEX` | Optional; e.g. `https://.*\.vercel\.app` for all preview URLs |
+| `ZOMATO_MAX_CATALOG_ROWS` | Optional; cap in-memory rows (e.g. `40000`) for **512MB** hosts. Omit for full ~52k rows on larger RAM. |
 
-8. [ ] Deploy; **first boot** may download the full dataset (watch RAM on free tier).
+The API **streams** the Hugging Face split (no second full copy of raw dicts). If Render still hits OOM, lower **`ZOMATO_MAX_CATALOG_ROWS`** (try `32000`) or upgrade RAM. [`render.yaml`](../render.yaml) sets `40000` by default on the free tier.
+
+8. [ ] Deploy; **first boot** may download the dataset (watch RAM on free tier).
 9. [ ] Copy the service URL (**no trailing slash**). Smoke test: `https://<host>/api/health` → `"ok": true`.
 
 **Note:** `https://<host>/` on Render still serves the Phase 6 Jinja UI from the same FastAPI process. Vercel is only for the Next.js client.

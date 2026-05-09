@@ -231,6 +231,7 @@ phase6 (surface)
 - **Live LLM (backend → provider):** `OPENAI_API_KEY` and/or **`GROQ_API_KEY`** (see `zomato_llm.config`); when provider limits or key issues occur, the app returns smart local fallback explanations
 - **Optional for better HF rate limits:** `HF_TOKEN`
 - **Dataset scope note:** current source dataset values for `listed_in(city)` are predominantly Bangalore localities.
+- **Low memory (e.g. Render 512MB):** catalog uses **streaming** ingest; optional **`ZOMATO_MAX_CATALOG_ROWS`** caps in-memory rows (see [`Deployment.md`](./Deployment.md)).
 
 ## Final phase summary
 
