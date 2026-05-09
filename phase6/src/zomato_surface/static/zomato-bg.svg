@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="420" viewBox="0 0 1400 420" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4a0f15"/>
+      <stop offset="55%" stop-color="#922735"/>
+      <stop offset="100%" stop-color="#c43e4f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="420" fill="url(#bg)"/>
+  <g fill="#ffffff" fill-opacity="0.08" font-family="Segoe UI, Arial, sans-serif" font-weight="700" font-size="88">
+    <text x="80" y="120">ZOMATO</text>
+    <text x="520" y="120">ZOMATO</text>
+    <text x="960" y="120">ZOMATO</text>
+    <text x="180" y="240">ZOMATO</text>
+    <text x="620" y="240">ZOMATO</text>
+    <text x="1060" y="240">ZOMATO</text>
+    <text x="60" y="360">ZOMATO</text>
+    <text x="500" y="360">ZOMATO</text>
+    <text x="940" y="360">ZOMATO</text>
+  </g>
+</svg>

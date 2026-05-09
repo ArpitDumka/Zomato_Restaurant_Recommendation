@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zomato-raw-ingest"
+version = "0.1.0"
+description = "Phase 2: raw Hugging Face dataset ingestion (no normalization)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "datasets>=2.16.0,<4.0.0",
+    "huggingface_hub>=0.20.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "ruff>=0.3.0", "pandas>=2.0.0"]
+pandas = ["pandas>=2.0.0"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

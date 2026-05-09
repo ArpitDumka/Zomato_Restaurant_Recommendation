@@ -1,0 +1,31 @@
+name: Phase 1 CI
+
+on:
+  push:
+    paths:
+      - "phase1/**"
+      - ".github/workflows/phase1-ci.yml"
+  pull_request:
+    paths:
+      - "phase1/**"
+      - ".github/workflows/phase1-ci.yml"
+
+jobs:
+  phase1:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: phase1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install phase2 (ingestion)
+        run: pip install -e "../phase2"
+      - name: Install package (editable) + dev + web
+        run: pip install -e ".[dev,web]"
+      - name: Ruff
+        run: ruff check src tests
+      - name: Pytest
+        run: pytest

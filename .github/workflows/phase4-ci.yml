@@ -1,0 +1,31 @@
+name: Phase 4 CI
+
+on:
+  push:
+    paths:
+      - "phase4/**"
+      - ".github/workflows/phase4-ci.yml"
+  pull_request:
+    paths:
+      - "phase4/**"
+      - ".github/workflows/phase4-ci.yml"
+
+jobs:
+  phase4:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: phase4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install zomato-canonical (phase 3)
+        run: pip install -e "../phase3"
+      - name: Install zomato-filter + dev
+        run: pip install -e ".[dev]"
+      - name: Ruff
+        run: ruff check src tests
+      - name: Pytest
+        run: pytest

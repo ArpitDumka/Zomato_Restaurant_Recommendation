@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zomato recommend — preview</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <h1>Restaurant discovery <span class="badge">preview</span></h1>
+      <p class="sub">Status and raw Hugging Face sample. Normalization lives in phase3 (<code>zomato_canonical</code>); filters and LLM are later.</p>
+      <p class="meta">App <code>{{ app_version }}</code></p>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="card" id="status-section">
+      <h2>Implementation status</h2>
+      <p class="muted" id="status-loading">Loading…</p>
+      <ul class="phase-list hidden" id="phase-list"></ul>
+      <p class="error hidden" id="status-error"></p>
+    </section>
+
+    <section class="card">
+      <h2>Raw dataset sample</h2>
+      <p class="muted">Loads live from <code>ManikaSaini/zomato-restaurant-recommendation</code> (first run may take a minute).</p>
+      <div class="row">
+        <label>Rows <input type="number" id="limit" value="15" min="1" max="200" /></label>
+        <button type="button" id="load-btn" class="btn primary">Load sample</button>
+      </div>
+      <p class="error hidden" id="data-error"></p>
+      <div class="table-wrap hidden" id="table-wrap">
+        <table class="data-table">
+          <thead id="thead"></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p class="muted hidden" id="data-empty">No rows loaded.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a href="/api/health">/api/health</a>
+    ·
+    <a href="/docs">OpenAPI</a>
+  </footer>
+
+  <script>
+    async function loadStatus() {
+      const el = document.getElementById("phase-list");
+      const err = document.getElementById("status-error");
+      const loading = document.getElementById("status-loading");
+      try {
+        const r = await fetch("/api/health");
+        const j = await r.json();
+        loading.classList.add("hidden");
+        el.classList.remove("hidden");
+        el.innerHTML = j.phases.map(p => {
+          const c = p.done ? "done" : "todo";
+          return `<li class="phase ${c}"><span class="pid">${p.id}</span> ${p.name}</li>`;
+        }).join("");
+        if (!j.ingestion_installed) {
+          err.textContent = "Tip: install Phase 2 for live data: pip install -e ./phase2";
+          err.classList.remove("hidden");
+        }
+      } catch (e) {
+        loading.classList.add("hidden");
+        err.textContent = "Could not load /api/health: " + e;
+        err.classList.remove("hidden");
+      }
+    }
+
+    function renderTable(rows) {
+      const wrap = document.getElementById("table-wrap");
+      const thead = document.getElementById("thead");
+      const tbody = document.getElementById("tbody");
+      const empty = document.getElementById("data-empty");
+      if (!rows.length) {
+        wrap.classList.add("hidden");
+        empty.classList.remove("hidden");
+        return;
+      }
+      empty.classList.add("hidden");
+      const keys = Object.keys(rows[0]);
+      thead.innerHTML = "<tr>" + keys.map(k => `<th>${escapeHtml(k)}</th>`).join("") + "</tr>";
+      tbody.innerHTML = rows.map(row => {
+        return "<tr>" + keys.map(k => {
+          let v = row[k];
+          if (v === null || v === undefined) v = "";
+          const s = String(v);
+          const short = s.length > 120 ? s.slice(0, 117) + "…" : s;
+          return `<td title="${escapeAttr(s)}">${escapeHtml(short)}</td>`;
+        }).join("") + "</tr>";
+      }).join("");
+      wrap.classList.remove("hidden");
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+    function escapeAttr(s) {
+      return escapeHtml(s).replace(/"/g, "&quot;");
+    }
+
+    document.getElementById("load-btn").addEventListener("click", async () => {
+      const err = document.getElementById("data-error");
+      const btn = document.getElementById("load-btn");
+      const lim = document.getElementById("limit");
+      err.classList.add("hidden");
+      err.textContent = "";
+      btn.disabled = true;
+      btn.textContent = "Loading…";
+      try {
+        const n = Math.min(200, Math.max(1, parseInt(lim.value, 10) || 15));
+        lim.value = n;
+        const r = await fetch("/api/restaurants?limit=" + n);
+        const j = await r.json();
+        if (j.error) {
+          err.textContent = j.error;
+          err.classList.remove("hidden");
+          renderTable([]);
+        } else {
+          renderTable(j.rows || []);
+        }
+      } catch (e) {
+        err.textContent = String(e);
+        err.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Load sample";
+      }
+    });
+
+    loadStatus();
+  </script>
+</body>
+</html>

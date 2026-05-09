@@ -1,0 +1,27 @@
+name: Phase 5 CI
+
+on:
+  push:
+    paths:
+      - "phase5/**"
+      - ".github/workflows/phase5-ci.yml"
+  pull_request:
+    paths:
+      - "phase5/**"
+      - ".github/workflows/phase5-ci.yml"
+
+jobs:
+  phase5:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: phase5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e "../phase3" && pip install -e "../phase4"
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests
+      - run: pytest

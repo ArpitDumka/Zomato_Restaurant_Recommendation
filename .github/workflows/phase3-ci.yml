@@ -1,0 +1,29 @@
+name: Phase 3 CI
+
+on:
+  push:
+    paths:
+      - "phase3/**"
+      - ".github/workflows/phase3-ci.yml"
+  pull_request:
+    paths:
+      - "phase3/**"
+      - ".github/workflows/phase3-ci.yml"
+
+jobs:
+  phase3:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: phase3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package (editable) + dev
+        run: pip install -e ".[dev]"
+      - name: Ruff
+        run: ruff check src tests
+      - name: Pytest
+        run: pytest
