@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import gc
 import logging
 import os
 import sys
@@ -31,7 +30,7 @@ _lock = threading.Lock()
 _bundle: CatalogBundle | None = None
 
 # Railway: without an explicit cap, stay under typical small-instance RAM.
-_DEFAULT_RAILWAY_CATALOG_CAP = 15_000
+_DEFAULT_RAILWAY_CATALOG_CAP = 25_000
 _MAX_CAP = 500_000
 
 
@@ -128,6 +127,22 @@ def _railway_default_cap() -> int:
     return _DEFAULT_RAILWAY_CATALOG_CAP
 
 
+def _catalog_hf_streaming() -> bool:
+    """
+    Hugging Face iteration mode for the catalog load.
+
+    Default ``False`` (materialized Arrow): faster scan after cache is warm; uses
+    more peak RAM while the table is loaded. Set ``ZOMATO_HF_STREAMING=1`` if the
+    worker OOMs during dataset load on a small plan.
+    """
+    raw = os.environ.get("ZOMATO_HF_STREAMING", "").strip().lower()
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if raw in ("0", "false", "no", "off"):
+        return False
+    return False
+
+
 @dataclass(frozen=True, slots=True)
 class CatalogBundle:
     """In-memory full catalog after one Hub materialized load + normalize."""
@@ -151,8 +166,10 @@ def get_catalog(*, force_refresh: bool = False) -> CatalogBundle:
         recs: list[RestaurantRecord] = []
         raw_seen = 0
         scan_acc = RawFilterScanAcc()
-        # One stream: all-row filter distincts; normalize only until memory cap.
-        for raw in iter_raw_rows(streaming=True):
+        hf_stream = _catalog_hf_streaming()
+        logger.info("catalog HF load: streaming=%s", hf_stream)
+        # One pass: all-row filter distincts; normalize only until memory cap.
+        for raw in iter_raw_rows(streaming=hf_stream):
             raw_seen += 1
             at_cap = cap is not None and len(recs) >= cap
             if at_cap:
@@ -183,7 +200,6 @@ def get_catalog(*, force_refresh: bool = False) -> CatalogBundle:
             filter_snapshot=snapshot,
         )
         del recs
-        gc.collect()
         logger.info(
             "catalog materialized: raw_iter=%s normalized=%s in %.2fs (streamed%s)",
             raw_seen,

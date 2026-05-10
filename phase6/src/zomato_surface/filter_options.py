@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 _BUDGET_ORDER = ("low", "medium", "high", "unknown")
 
-# On Railway, limit dropdown size (JSON + DOM); recommend API still searches full data.
-_RAILWAY_FILTER_MAX_CITIES_DEFAULT = 80
-_RAILWAY_FILTER_MAX_CUISINES_DEFAULT = 45
+# Optional dropdown limits via env only. No Railway auto-cap (full lists by default).
+_RAILWAY_FILTER_MAX_CITIES_DEFAULT: int | None = None
+_RAILWAY_FILTER_MAX_CUISINES_DEFAULT: int | None = None
 
 
 def _running_on_railway() -> bool:
@@ -31,8 +31,8 @@ def _dropdown_cap(env_name: str, railway_default: int | None) -> int | None:
     """
     Positive int = max dropdown entries; ``None`` = unlimited.
 
-    Env ``ZOMATO_FILTER_MAX_*``: set to ``0`` or unset on non-Railway for no cap.
-    On Railway, when unset, ``railway_default`` applies.
+    Env ``ZOMATO_FILTER_MAX_*``: unset or ``0`` = no cap. When unset on Railway,
+    ``railway_default`` applies (``None`` here = never cap unless env is set).
     """
     raw = os.environ.get(env_name, "").strip()
     if raw:
@@ -56,74 +56,6 @@ def _ordered_by_count_then_casefold(
     scored = [(counts.get(k, 0), str.casefold(k), k) for k in keys]
     scored.sort(key=lambda t: (-t[0], t[1]))
     return tuple(k for _, _, k in scored[:cap])
-
-# Drop rare / niche cuisine tags from filter dropdowns only (search still matches raw
-# data). Tokens use str.casefold(); canonical tokens from CSV are usually lowercase.
-_NICHE_CUISINE_EXCLUSIONS_CASEFOLD: frozenset[str] = frozenset(
-    {
-        "afghan",
-        "afghani",
-        "african",
-        "arabian",
-        "armenian",
-        "belgian",
-        "burmese",
-        "cambodian",
-        "caribbean",
-        "croatian",
-        "czech",
-        "danish",
-        "dutch",
-        "ethiopian",
-        "filipino",
-        "finnish",
-        "georgian",
-        "hungarian",
-        "icelandic",
-        "indonesian",
-        "iranian",
-        "iraqi",
-        "irish",
-        "israeli",
-        "jamaican",
-        "kazakh",
-        "laotian",
-        "lebanese",
-        "libyan",
-        "middle eastern",
-        "mongolian",
-        "moroccan",
-        "nigerian",
-        "north african",
-        "norwegian",
-        "omani",
-        "peruvian",
-        "persian",
-        "polish",
-        "portuguese",
-        "qatari",
-        "romanian",
-        "scandinavian",
-        "slovak",
-        "sudanese",
-        "swedish",
-        "syrian",
-        "tunisian",
-        "ukrainian",
-        "uzbek",
-        "venezuelan",
-        "yemeni",
-    }
-)
-
-
-def _is_niche_cuisine_token(c: str) -> bool:
-    s = c.strip()
-    return not s or s.casefold() in _NICHE_CUISINE_EXCLUSIONS_CASEFOLD
-
-
-def _visible_cuisine_keys(cuisines: set[str]) -> set[str]:
-    return {c for c in cuisines if not _is_niche_cuisine_token(c)}
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,10 +124,9 @@ def build_filter_snapshot(
         "ZOMATO_FILTER_MAX_CUISINES",
         _RAILWAY_FILTER_MAX_CUISINES_DEFAULT,
     )
-    visible_cuisines = _visible_cuisine_keys(cuisines)
     cities_sorted = _ordered_by_count_then_casefold(cities, city_counts, city_cap)
     cuisines_sorted = _ordered_by_count_then_casefold(
-        visible_cuisines,
+        cuisines,
         cuisine_counts,
         cuisine_cap,
     )
@@ -204,13 +135,13 @@ def build_filter_snapshot(
     n = len(records)
 
     logger.info(
-        "filter snapshot: rows=%s cities=%s/%s cuisines=%s/%s (visible pre-cap) "
-        "ratings=%s bands=%s caps cities=%s cuisines=%s",
+        "filter snapshot: rows=%s cities=%s/%s cuisines=%s/%s ratings=%s bands=%s "
+        "caps cities=%s cuisines=%s",
         n,
         len(cities_sorted),
         len(cities),
         len(cuisines_sorted),
-        len(visible_cuisines),
+        len(cuisines),
         len(ratings_sorted),
         len(bands_sorted),
         city_cap,
@@ -249,14 +180,13 @@ def filter_snapshot_from_full_scan_accumulator(
         "ZOMATO_FILTER_MAX_CUISINES",
         _RAILWAY_FILTER_MAX_CUISINES_DEFAULT,
     )
-    visible_cuisines = _visible_cuisine_keys(acc.cuisines)
     cities_sorted = _ordered_by_count_then_casefold(
         acc.cities,
         acc.city_counts,
         city_cap,
     )
     cuisines_sorted = _ordered_by_count_then_casefold(
-        visible_cuisines,
+        acc.cuisines,
         acc.cuisine_counts,
         cuisine_cap,
     )
@@ -264,13 +194,13 @@ def filter_snapshot_from_full_scan_accumulator(
     bands_sorted = tuple(b for b in _BUDGET_ORDER if b in acc.bands)
 
     logger.info(
-        "filter snapshot (full scan): normalized_stored=%s cities=%s/%s cuisines=%s/%s "
-        "(visible pre-cap) ratings=%s bands=%s caps cities=%s cuisines=%s",
+        "filter snapshot (full scan): normalized_stored=%s cities=%s/%s "
+        "cuisines=%s/%s ratings=%s bands=%s caps cities=%s cuisines=%s",
         normalized_row_count,
         len(cities_sorted),
         len(acc.cities),
         len(cuisines_sorted),
-        len(visible_cuisines),
+        len(acc.cuisines),
         len(ratings_sorted),
         len(bands_sorted),
         city_cap,

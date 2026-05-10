@@ -1,4 +1,4 @@
-"""Filter snapshot helpers (niche cuisine trimming for UI)."""
+"""Filter snapshot helpers (optional env caps)."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ def _minimal_record(
     )
 
 
-def test_build_filter_snapshot_drops_niche_cuisines_keeps_cities() -> None:
+def test_build_filter_snapshot_all_cuisines_keeps_cities() -> None:
     recs = [
         _minimal_record(
             city="Bangalore",
@@ -52,12 +52,16 @@ def test_build_filter_snapshot_drops_niche_cuisines_keeps_cities() -> None:
     ]
     snap = build_filter_snapshot(recs, scan_seconds=0.05)
     assert snap.cities == ("Bangalore", "Mumbai")
-    assert snap.cuisines == ("chinese", "italian", "north indian")
-    assert "arabian" not in snap.cuisines
-    assert "lebanese" not in snap.cuisines
+    assert snap.cuisines == (
+        "arabian",
+        "chinese",
+        "italian",
+        "lebanese",
+        "north indian",
+    )
 
 
-def test_full_scan_snapshot_drops_niche_cuisines() -> None:
+def test_full_scan_snapshot_includes_all_cuisines() -> None:
     acc = RawFilterScanAcc()
     acc.cities.update({"Pune", "Delhi"})
     acc.city_counts.update({"Pune": 3, "Delhi": 2})
@@ -67,8 +71,7 @@ def test_full_scan_snapshot_drops_niche_cuisines() -> None:
         acc, normalized_row_count=99, scan_seconds=0.1
     )
     assert snap.cities == ("Delhi", "Pune")
-    assert snap.cuisines == ("biryani", "south indian")
-    assert "moroccan" not in snap.cuisines
+    assert snap.cuisines == ("biryani", "moroccan", "south indian")
 
 
 def test_filter_snapshot_city_cap_by_frequency(monkeypatch: pytest.MonkeyPatch) -> None:
