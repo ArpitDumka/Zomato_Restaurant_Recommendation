@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import os
 import traceback
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Query, Request
@@ -14,6 +17,7 @@ from fastapi.templating import Jinja2Templates
 
 from zomato_surface import __version__
 from zomato_surface.api_schemas import RecommendRequest
+from zomato_surface.catalog import get_catalog, warm_catalog_at_startup
 from zomato_surface.filter_options import (
     filter_options_response_dict,
     get_filter_options,
@@ -22,6 +26,7 @@ from zomato_surface.service import recommend
 from zomato_surface.ui_options import LLM_CAP_OPTIONS, TOP_K_OPTIONS
 
 _BASE = Path(__file__).resolve().parent
+_log = logging.getLogger(__name__)
 
 
 def _cors_allow_origins() -> list[str]:
@@ -44,10 +49,20 @@ def _cors_allow_origins() -> list[str]:
 
 
 def create_app() -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        if warm_catalog_at_startup():
+            _log.info("catalog warmup starting")
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, get_catalog)
+            _log.info("catalog warmup complete")
+        yield
+
     app = FastAPI(
         title="Zomato-inspired recommendations",
         description="Phase 6: full pipeline (HF -> normalize -> filter -> LLM).",
         version=__version__,
+        lifespan=lifespan,
     )
     # Next.js on :3000 locally; set CORS_ORIGINS (comma-separated) and optional
     # CORS_ORIGIN_REGEX / CORS_ORIGINS on the API host for Vercel

@@ -29,8 +29,9 @@ logger = logging.getLogger(__name__)
 _lock = threading.Lock()
 _bundle: CatalogBundle | None = None
 
-# Railway: without an explicit cap, stay under typical small-instance RAM.
-_DEFAULT_RAILWAY_CATALOG_CAP = 25_000
+# Railway: small plans OOM with ~25k full RestaurantRecord rows + materialized HF.
+# Override with ZOMATO_RAILWAY_DEFAULT_CAP or ZOMATO_MAX_CATALOG_ROWS when you have RAM.
+_DEFAULT_RAILWAY_CATALOG_CAP = 12_000
 _MAX_CAP = 500_000
 
 
@@ -45,6 +46,22 @@ def _running_on_railway() -> bool:
         or os.environ.get("RAILWAY_PROJECT_ID")
         or os.environ.get("RAILWAY_SERVICE_ID")
     )
+
+
+def warm_catalog_at_startup() -> bool:
+    """
+    Load the catalog during app startup (async executor) so the first HTTP client
+    does not hit a long blocking load or worker kill mid-request.
+
+    On Railway, default **on**. Set ``ZOMATO_CATALOG_WARMUP=0`` to skip (faster
+    process boot; first API call pays the load cost).
+    """
+    raw = os.environ.get("ZOMATO_CATALOG_WARMUP", "").strip().lower()
+    if raw in ("0", "false", "no", "off"):
+        return False
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    return _running_on_railway()
 
 
 def _catalog_row_cap() -> tuple[int | None, str | None]:
@@ -131,16 +148,19 @@ def _catalog_hf_streaming() -> bool:
     """
     Hugging Face iteration mode for the catalog load.
 
-    Default ``False`` (materialized Arrow): faster scan after cache is warm; uses
-    more peak RAM while the table is loaded. Set ``ZOMATO_HF_STREAMING=1`` if the
-    worker OOMs during dataset load on a small plan.
+    On **Railway**, default ``True`` (streaming): lower peak RAM — avoids holding the
+    full Arrow table plus tens of thousands of dict rows at once.
+
+    Elsewhere, default ``False`` (materialized): faster iteration after cache is warm.
+
+    Override with ``ZOMATO_HF_STREAMING=0`` or ``1`` in any environment.
     """
     raw = os.environ.get("ZOMATO_HF_STREAMING", "").strip().lower()
     if raw in ("1", "true", "yes", "on"):
         return True
     if raw in ("0", "false", "no", "off"):
         return False
-    return False
+    return _running_on_railway()
 
 
 @dataclass(frozen=True, slots=True)

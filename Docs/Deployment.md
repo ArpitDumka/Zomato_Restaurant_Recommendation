@@ -32,14 +32,15 @@ Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so th
 | `HF_TOKEN` | Optional; Hugging Face Hub |
 | `CORS_ORIGINS` | Optional; comma-separated origins, e.g. `https://your-app.vercel.app` |
 | `CORS_ORIGIN_REGEX` | Recommended for Vercel: `https://[^/]+\.vercel\.app$` (all `*.vercel.app` hosts) |
-| `ZOMATO_MAX_CATALOG_ROWS` | Optional; explicit cap (e.g. `40000`). On **Railway**, if unset, the app defaults to **`ZOMATO_RAILWAY_DEFAULT_CAP`** (default **25000**) |
-| `ZOMATO_RAILWAY_DEFAULT_CAP` | Optional; overrides the Railway-only default cap (min 1000, max 500000) |
+| `ZOMATO_MAX_CATALOG_ROWS` | Optional; explicit cap. On **Railway**, if unset, defaults to **`ZOMATO_RAILWAY_DEFAULT_CAP`** (default **12000**) to avoid OOM |
+| `ZOMATO_RAILWAY_DEFAULT_CAP` | Optional; overrides the Railway-only default cap (min 1000, max 500000). Raise (e.g. **20000**) if you add RAM |
 | `ZOMATO_FULL_CATALOG` | Set to `1` on a **large** Railway instance to load the full ~52k rows (no cap) |
-| `ZOMATO_HF_STREAMING` | Optional; **`1`** = stream the HF split (lower peak RAM, slower). Default **`0`** = materialized table (faster after cache; set **`1`** if the worker OOMs while loading the dataset) |
+| `ZOMATO_HF_STREAMING` | **`1`** = stream HF (lower peak RAM). **`0`** = materialized Arrow (faster after cache). On **Railway**, default **`1`**; locally, default **`0`** |
+| `ZOMATO_CATALOG_WARMUP` | On **Railway**, default **on**: load catalog during startup so `/api/filter-options` is not the first heavy work. Set **`0`** to skip (faster boot; first request pays the cost) |
 | `ZOMATO_FILTER_MAX_CITIES` | Optional; max city dropdown entries (frequency order). Unset = **all** cities from the split |
 | `ZOMATO_FILTER_MAX_CUISINES` | Optional; max cuisine dropdown entries. Unset = **all** cuisines |
 
-The catalog does **one** pass over the split (normalize up to the cap, then light merges for remaining rows). Default HF load is **non-streaming** for speed; use **`ZOMATO_HF_STREAMING=1`** on tiny RAM if load fails. After load, logs include **`catalog footprint`** for triage. **`ZOMATO_FULL_CATALOG=1`** needs enough memory for ~52k normalized rows.
+The catalog does **one** pass over the split (normalize up to the cap, then light merges for remaining rows). After load, logs include **`catalog footprint`**. **`ZOMATO_FULL_CATALOG=1`** needs enough memory for ~52k normalized rows.
 
 5. [ ] **Deploy**, then open **Settings → Networking → Generate Domain** (or attach your domain). Copy the **HTTPS** URL (**no trailing slash**).
 6. [ ] Smoke test: `https://<your-railway-host>/api/health` → JSON with `"ok": true`.
