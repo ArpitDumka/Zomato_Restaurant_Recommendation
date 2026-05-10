@@ -13,6 +13,74 @@ logger = logging.getLogger(__name__)
 
 _BUDGET_ORDER = ("low", "medium", "high", "unknown")
 
+# Drop rare / niche cuisine tags from filter dropdowns only (search still matches raw
+# data). Tokens use str.casefold(); canonical tokens from CSV are usually lowercase.
+_NICHE_CUISINE_EXCLUSIONS_CASEFOLD: frozenset[str] = frozenset(
+    {
+        "afghan",
+        "afghani",
+        "african",
+        "arabian",
+        "armenian",
+        "belgian",
+        "burmese",
+        "cambodian",
+        "caribbean",
+        "croatian",
+        "czech",
+        "danish",
+        "dutch",
+        "ethiopian",
+        "filipino",
+        "finnish",
+        "georgian",
+        "hungarian",
+        "icelandic",
+        "indonesian",
+        "iranian",
+        "iraqi",
+        "irish",
+        "israeli",
+        "jamaican",
+        "kazakh",
+        "laotian",
+        "lebanese",
+        "libyan",
+        "middle eastern",
+        "mongolian",
+        "moroccan",
+        "nigerian",
+        "north african",
+        "norwegian",
+        "omani",
+        "peruvian",
+        "persian",
+        "polish",
+        "portuguese",
+        "qatari",
+        "romanian",
+        "scandinavian",
+        "slovak",
+        "sudanese",
+        "swedish",
+        "syrian",
+        "tunisian",
+        "ukrainian",
+        "uzbek",
+        "venezuelan",
+        "yemeni",
+    }
+)
+
+
+def _visible_cuisines_sorted(cuisines: set[str]) -> tuple[str, ...]:
+    kept = [
+        c
+        for c in cuisines
+        if (s := c.strip()) and s.casefold() not in _NICHE_CUISINE_EXCLUSIONS_CASEFOLD
+    ]
+    return tuple(sorted(kept, key=str.casefold))
+
 
 @dataclass(frozen=True, slots=True)
 class FilterOptionsSnapshot:
@@ -69,7 +137,7 @@ def build_filter_snapshot(
             cost_max = v if cost_max is None else max(cost_max, v)
 
     cities_sorted = tuple(sorted(cities, key=str.casefold))
-    cuisines_sorted = tuple(sorted(cuisines, key=str.casefold))
+    cuisines_sorted = _visible_cuisines_sorted(cuisines)
     ratings_sorted = tuple(sorted(ratings_rounded))
     bands_sorted = tuple(b for b in _BUDGET_ORDER if b in bands)
     n = len(records)
@@ -108,7 +176,7 @@ def filter_snapshot_from_full_scan_accumulator(
     reflect the full stream passed into ``acc``.
     """
     cities_sorted = tuple(sorted(acc.cities, key=str.casefold))
-    cuisines_sorted = tuple(sorted(acc.cuisines, key=str.casefold))
+    cuisines_sorted = _visible_cuisines_sorted(acc.cuisines)
     ratings_sorted = tuple(sorted(acc.ratings))
     bands_sorted = tuple(b for b in _BUDGET_ORDER if b in acc.bands)
 
