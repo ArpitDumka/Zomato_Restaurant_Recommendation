@@ -32,11 +32,13 @@ Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so th
 | `HF_TOKEN` | Optional; Hugging Face Hub |
 | `CORS_ORIGINS` | Optional; comma-separated origins, e.g. `https://your-app.vercel.app` |
 | `CORS_ORIGIN_REGEX` | Recommended for Vercel: `https://[^/]+\.vercel\.app$` (all `*.vercel.app` hosts) |
-| `ZOMATO_MAX_CATALOG_ROWS` | Optional; explicit cap (e.g. `40000`). On **Railway**, if unset, the app defaults to **`ZOMATO_RAILWAY_DEFAULT_CAP`** (default **25000**) to avoid OOM on small plans |
+| `ZOMATO_MAX_CATALOG_ROWS` | Optional; explicit cap (e.g. `40000`). On **Railway**, if unset, the app defaults to **`ZOMATO_RAILWAY_DEFAULT_CAP`** (default **15000**) to avoid OOM on small plans |
 | `ZOMATO_RAILWAY_DEFAULT_CAP` | Optional; overrides the Railway-only default cap (min 1000, max 500000) |
 | `ZOMATO_FULL_CATALOG` | Set to `1` on a **large** Railway instance to load the full ~52k rows (no cap) |
+| `ZOMATO_FILTER_MAX_CITIES` | Optional; max city dropdown entries (frequency order). On Railway default **80** unless set; use **`0`** for unlimited |
+| `ZOMATO_FILTER_MAX_CUISINES` | Optional; max cuisine dropdown entries after niche filtering. On Railway default **45** unless set; **`0`** = unlimited |
 
-The API **streams** the Hugging Face split (no second full copy of raw dicts). On Railway, the automatic cap prevents most OOMs during catalog load; raise RAM and set **`ZOMATO_FULL_CATALOG=1`** (or a higher **`ZOMATO_MAX_CATALOG_ROWS`**) when you need the full dataset.
+The API **streams** the Hugging Face split (no second full copy of raw dicts). On Railway, the automatic cap prevents most OOMs during catalog load; raise RAM and set **`ZOMATO_FULL_CATALOG=1`** (or a higher **`ZOMATO_MAX_CATALOG_ROWS`**) when you need the full dataset. After load, logs include **`catalog footprint`** (row counts + heuristic size + best-effort RSS) for OOM triage. Filter dropdown caps shrink JSON/DOM only; they do **not** replace a lower **`ZOMATO_MAX_CATALOG_ROWS`** if the process still runs out of RAM.
 
 5. [ ] **Deploy**, then open **Settings → Networking → Generate Domain** (or attach your domain). Copy the **HTTPS** URL (**no trailing slash**).
 6. [ ] Smoke test: `https://<your-railway-host>/api/health` → JSON with `"ok": true`.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from zomato_canonical import RawFilterScanAcc, RestaurantRecord
 from zomato_canonical.normalize import cuisines_tokens_from_display
 
@@ -59,10 +60,43 @@ def test_build_filter_snapshot_drops_niche_cuisines_keeps_cities() -> None:
 def test_full_scan_snapshot_drops_niche_cuisines() -> None:
     acc = RawFilterScanAcc()
     acc.cities.update({"Pune", "Delhi"})
+    acc.city_counts.update({"Pune": 3, "Delhi": 2})
     acc.cuisines.update({"south indian", "moroccan", "biryani"})
+    acc.cuisine_counts.update({"south indian": 2, "moroccan": 1, "biryani": 4})
     snap = filter_snapshot_from_full_scan_accumulator(
         acc, normalized_row_count=99, scan_seconds=0.1
     )
     assert snap.cities == ("Delhi", "Pune")
     assert snap.cuisines == ("biryani", "south indian")
     assert "moroccan" not in snap.cuisines
+
+
+def test_filter_snapshot_city_cap_by_frequency(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ZOMATO_FILTER_MAX_CITIES", "2")
+    for key in (
+        "RAILWAY_ENVIRONMENT_ID",
+        "RAILWAY_PROJECT_ID",
+        "RAILWAY_SERVICE_ID",
+    ):
+        monkeypatch.delenv(key, raising=False)
+    acc = RawFilterScanAcc()
+    acc.cities.update({"Rareburg", "Metro", "Smallville"})
+    acc.city_counts.update({"Rareburg": 1, "Metro": 100, "Smallville": 5})
+    snap = filter_snapshot_from_full_scan_accumulator(
+        acc, normalized_row_count=1, scan_seconds=0.0
+    )
+    assert snap.cities == ("Metro", "Smallville")
+
+
+def test_city_cap_zero_means_unlimited_on_railway(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ZOMATO_FILTER_MAX_CITIES", "0")
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT_ID", "x")
+    acc = RawFilterScanAcc()
+    acc.cities.update({"B", "A"})
+    acc.city_counts.update({"A": 9, "B": 1})
+    snap = filter_snapshot_from_full_scan_accumulator(
+        acc, normalized_row_count=1, scan_seconds=0.0
+    )
+    assert snap.cities == ("A", "B")

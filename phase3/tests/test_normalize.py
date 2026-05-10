@@ -56,6 +56,8 @@ def test_filter_scan_raw_matches_record_merge() -> None:
     merge_record_into_filter_scan(rec, acc_rec)
     assert acc_raw.cities == acc_rec.cities
     assert acc_raw.cuisines == acc_rec.cuisines
+    assert acc_raw.city_counts == acc_rec.city_counts
+    assert acc_raw.cuisine_counts == acc_rec.cuisine_counts
     assert acc_raw.ratings == acc_rec.ratings
     assert acc_raw.bands == acc_rec.bands
     assert acc_raw.cost_min == acc_rec.cost_min

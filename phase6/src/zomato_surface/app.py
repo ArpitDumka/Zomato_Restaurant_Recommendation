@@ -50,7 +50,8 @@ def create_app() -> FastAPI:
         version=__version__,
     )
     # Next.js on :3000 locally; set CORS_ORIGINS (comma-separated) and optional
-    # CORS_ORIGIN_REGEX / CORS_ORIGINS on the API host for Vercel (see Docs/Deployment.md).
+    # CORS_ORIGIN_REGEX / CORS_ORIGINS on the API host for Vercel
+    # (see Docs/Deployment.md).
     _cors_kw: dict = {
         "allow_origins": _cors_allow_origins(),
         "allow_credentials": False,

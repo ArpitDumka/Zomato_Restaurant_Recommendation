@@ -119,6 +119,8 @@ class RawFilterScanAcc:
 
     cities: set[str] = field(default_factory=set)
     cuisines: set[str] = field(default_factory=set)
+    city_counts: dict[str, int] = field(default_factory=dict)
+    cuisine_counts: dict[str, int] = field(default_factory=dict)
     ratings: set[float] = field(default_factory=set)
     bands: set[str] = field(default_factory=set)
     cost_min: int | None = None
@@ -136,10 +138,12 @@ def _merge_parsed_into_filter_scan(
     c = city_listed.strip()
     if c:
         acc.cities.add(c)
+        acc.city_counts[c] = acc.city_counts.get(c, 0) + 1
     for tok in cuisines_tokens:
         t = tok.strip()
         if t:
             acc.cuisines.add(t)
+            acc.cuisine_counts[t] = acc.cuisine_counts.get(t, 0) + 1
     if rating is not None:
         acc.ratings.add(round(rating, 1))
     acc.bands.add(cost_to_budget_band(cost_inr))

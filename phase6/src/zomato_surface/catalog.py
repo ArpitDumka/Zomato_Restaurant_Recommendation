@@ -5,6 +5,7 @@ from __future__ import annotations
 import gc
 import logging
 import os
+import sys
 import threading
 import time
 from collections.abc import Sequence
@@ -30,7 +31,7 @@ _lock = threading.Lock()
 _bundle: CatalogBundle | None = None
 
 # Railway: without an explicit cap, stay under typical small-instance RAM.
-_DEFAULT_RAILWAY_CATALOG_CAP = 25_000
+_DEFAULT_RAILWAY_CATALOG_CAP = 15_000
 _MAX_CAP = 500_000
 
 
@@ -76,6 +77,45 @@ def _catalog_row_cap() -> tuple[int | None, str | None]:
         cap = _railway_default_cap()
         return cap, "railway default"
     return None, None
+
+
+def _process_max_rss_bytes() -> int | None:
+    """Best-effort peak RSS for this process (platform-dependent)."""
+    try:
+        import resource
+
+        ru = resource.getrusage(resource.RUSAGE_SELF)
+        rss = ru.ru_maxrss
+        if sys.platform == "darwin":
+            return rss
+        if sys.platform.startswith("linux"):
+            return rss * 1024
+        if rss > 0:
+            return rss
+    except (AttributeError, OSError, ValueError):
+        pass
+    return None
+
+
+def _log_catalog_footprint(
+    *,
+    normalized_rows: int,
+    raw_rows: int,
+    cap: int | None,
+) -> None:
+    """Heuristic size + RSS after load (for Railway OOM triage)."""
+    approx_mb = normalized_rows * 1.1 / 1024.0
+    rss = _process_max_rss_bytes()
+    rss_mb = f"{rss / (1024 * 1024):.1f} MiB" if rss else "n/a"
+    logger.info(
+        "catalog footprint: normalized_rows=%s raw_rows_seen=%s cap=%s "
+        "heuristic_heap-ish≈%.1f MiB ru_maxrss≈%s",
+        normalized_rows,
+        raw_rows,
+        cap,
+        approx_mb,
+        rss_mb,
+    )
 
 
 def _railway_default_cap() -> int:
@@ -150,6 +190,11 @@ def get_catalog(*, force_refresh: bool = False) -> CatalogBundle:
             len(_bundle.records),
             elapsed,
             f", cap={cap} ({cap_reason})" if cap is not None else "",
+        )
+        _log_catalog_footprint(
+            normalized_rows=len(_bundle.records),
+            raw_rows=raw_seen,
+            cap=cap,
         )
         return _bundle
 
