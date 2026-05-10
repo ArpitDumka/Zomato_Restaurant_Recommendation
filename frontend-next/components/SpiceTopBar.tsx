@@ -22,7 +22,12 @@ export default function SpiceTopBar({
   return (
     <header className="topbar">
       <div className="topbar-inner">
-        <div className="brand">SpiceRoute Select</div>
+        <div className="brand">
+          <span className="brand-mark" aria-hidden>
+            S
+          </span>
+          <span>SpiceRoute</span>
+        </div>
         <nav className="nav">
           <button
             type="button"

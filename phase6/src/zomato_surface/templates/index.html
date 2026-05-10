@@ -17,6 +17,9 @@
         API host: <strong id="api-origin"></strong> · LLM
         <span id="hdr-llm" class="llm-badge llm-unknown">Idle</span>
       </p>
+      <p class="ver-meta">
+        App <code>{{ app_version }}</code> · Next.js + Railway API
+      </p>
     </div>
   </header>
 
@@ -64,9 +67,13 @@
         </div>
       </form>
       <p class="hint">
-        The FastAPI backend materializes an in-memory catalog on the first request and reuses it.
-        Row count below reflects what this server loaded (hosting may cap rows on small instances —
-        see <code>Docs/Deployment.md</code>).
+        The Hugging Face split is loaded by the API on first request and kept in memory, then
+        filtered by your choices. Up to your shortlist size (200–300) of the best-rated matches
+        go to the LLM for top picks.
+      </p>
+      <p class="hint">
+        This host materializes the catalog on first request. Row count below reflects what this
+        server loaded (small instances may cap rows — see <code>Docs/Deployment.md</code>).
       </p>
       <p class="hint muted" id="opts-meta"></p>
     </section>
@@ -86,10 +93,18 @@
     ·
     <a href="/api/health" target="_blank" rel="noreferrer">API health</a>
     <span class="footer-note">
-      Same UI theme as the Next.js app on Vercel. For split deploy: set
-      <code>NEXT_PUBLIC_API_BASE_URL</code> on Vercel and CORS on this API (<code>Docs/Deployment.md</code>).
+      Deploy: <code>NEXT_PUBLIC_API_BASE_URL</code> · CORS on Railway (<code>Docs/Deployment.md</code>).
     </span>
   </footer>
+
+  <section class="legal">
+    <div class="legal-inner">
+      <div id="terms" class="legal-item">
+        <strong>Terms</strong>: Recommendation text is assistive and may use fallback logic when
+        model limits are hit.
+      </div>
+    </div>
+  </section>
 
   <script>
     document.getElementById("api-origin").textContent = location.origin;

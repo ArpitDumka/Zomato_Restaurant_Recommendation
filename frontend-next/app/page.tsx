@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import packageJson from "../package.json";
 import SpiceHero from "@/components/SpiceHero";
 import SpicePreferencesForm from "@/components/SpicePreferencesForm";
 import SpiceResultBoard from "@/components/SpiceResultBoard";
@@ -128,7 +127,7 @@ export default function HomePage() {
   }
 
   return (
-    <>
+    <div className="page-root">
       <SpiceTopBar
         activeNav={activeNav}
         onNavigate={onNavigate}
@@ -137,7 +136,7 @@ export default function HomePage() {
         llmLoading={submitting}
       />
       <main className="main">
-        <SpiceHero appVersion={packageJson.version} />
+        <SpiceHero />
         <section className="layout">
           <SpicePreferencesForm
             options={options}
@@ -148,6 +147,7 @@ export default function HomePage() {
           />
           <SpiceResultBoard
             visible={boardVisible}
+            submitting={submitting}
             response={response}
             recommendError={recommendError}
             shortlist={shortlist}
@@ -164,10 +164,13 @@ export default function HomePage() {
         <a href={`${getApiBase()}/api/health`} target="_blank" rel="noreferrer">
           System Health
         </a>{" "}
-        · <a href="#privacy">Privacy</a> · <a href="#terms">Terms</a>
+        · <a href="#privacy">Privacy</a>
         <span className="footer-note">
-          Vercel: <code>NEXT_PUBLIC_API_BASE_URL</code> → Railway API · Railway: CORS for{" "}
-          <code>*.vercel.app</code> (<code>Docs/Deployment.md</code>).
+          Visual design is Zomato-inspired for this demo only — not affiliated with{" "}
+          <a href="https://www.zomato.com/" target="_blank" rel="noreferrer">
+            Zomato
+          </a>
+          .
         </span>
       </footer>
       <section className="legal">
@@ -176,12 +179,8 @@ export default function HomePage() {
             <strong>Privacy</strong>: We do not store personal profile data in this UI;
             recommendations are computed from your current session inputs.
           </div>
-          <div id="terms" className="legal-item">
-            <strong>Terms</strong>: Recommendation text is assistive and may use fallback logic
-            when model limits are hit.
-          </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

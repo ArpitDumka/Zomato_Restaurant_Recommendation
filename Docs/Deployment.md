@@ -41,7 +41,7 @@ The API **streams** the Hugging Face split (no second full copy of raw dicts). O
 5. [ ] **Deploy**, then open **Settings → Networking → Generate Domain** (or attach your domain). Copy the **HTTPS** URL (**no trailing slash**).
 6. [ ] Smoke test: `https://<your-railway-host>/api/health` → JSON with `"ok": true`.
 
-**Note:** `https://<host>/` on Railway serves a **minimal** Phase 6 UI (`minimal.css`) aligned with the Next.js app layout. **[Vercel](https://vercel.com/)** serves the **SpiceRoute** hub UI (same features: filters, recommendations, shortlist in-browser). Both call the same API.
+**Note:** `https://<host>/` on Railway serves a **minimal** Phase 6 UI (`minimal.css`): version line, HF/LLM pipeline copy, deploy (`NEXT_PUBLIC_API_BASE_URL` / CORS), and **Terms**. **[Vercel](https://vercel.com/)** serves the **SpiceRoute** hub (Zomato-inspired visuals, hero + pick images, **additional preferences**, shortlist, **donut loading overlay** during recommend; Privacy in footer). Both call the same API.
 
 ---
 
@@ -53,6 +53,8 @@ The API **streams** the Hugging Face split (no second full copy of raw dicts). O
 4. [ ] **Env:** `NEXT_PUBLIC_API_BASE_URL` = your Railway public URL (Production; add Preview if needed).
 5. [ ] Redeploy after changing `NEXT_PUBLIC_*` (baked at build time).
 6. [ ] If the browser reports CORS errors, fix `CORS_ORIGINS` / `CORS_ORIGIN_REGEX` on Railway and redeploy the API.
+
+**UX:** After **Get Recommendations**, the Vercel UI shows a **donut spinner** overlay on the recommendation board until `POST /api/recommend` returns (slow when the LLM runs).
 
 ---
 

@@ -6,7 +6,9 @@ For boundary handling and negative paths, see [EdgeCases.md](./EdgeCases.md).
 
 ## Backend and frontend (Phase 6 product)
 
-The shipped product is a **single Python process**: a **FastAPI backend** that serves both **JSON APIs** and the **browser UI** (no separate Node/React build). Phase 1’s optional preview on port 8000 is a different, smaller app; the **main** backend+frontend pair lives in **Phase 6**.
+**Local / single-URL mode:** one **Python process** — **FastAPI** serves **JSON APIs** and a **Jinja browser UI** on the same port (`.\run.ps1 -Surface` → **8765**). Phase 1’s preview on **8000** is a separate, smaller app.
+
+**Production (typical):** the **same FastAPI** runs on **Railway** (API + minimal Jinja UI at `/`), while the rich **Next.js** client deploys to **Vercel** and calls the API over HTTPS with CORS — see [`Deployment.md`](./Deployment.md).
 
 ### Backend (server)
 
@@ -34,12 +36,12 @@ The shipped product is a **single Python process**: a **FastAPI backend** that s
 
 | Layer | Role | Location (repo) |
 | --- | --- | --- |
-| **Page shell** | HTML structure, form, result list | [`phase6/src/zomato_surface/templates/index.html`](../phase6/src/zomato_surface/templates/index.html) |
-| **Styling** | Layout, theme, LLM badge | [`phase6/src/zomato_surface/static/style.css`](../phase6/src/zomato_surface/static/style.css) |
-| **Client logic** | `fetch('/api/filter-options')`, `fetch('/api/recommend')`, DOM updates | Embedded `<script>` in `index.html` (vanilla JS, no bundler) |
+| **Railway / same-origin UI** | Minimal two-card layout; deploy & HF/LLM **disclosures**, **Terms** in footer | [`phase6/src/zomato_surface/templates/index.html`](../phase6/src/zomato_surface/templates/index.html) + [`minimal.css`](../phase6/src/zomato_surface/static/minimal.css) |
+| **Reference / Spice CSS** | Source theme notes (SpiceRoute); Jinja does **not** import this file | [`phase6/src/zomato_surface/static/style.css`](../phase6/src/zomato_surface/static/style.css) |
+| **Client logic (Jinja)** | `fetch('/api/filter-options')`, `fetch('/api/recommend')`, DOM updates | Embedded `<script>` in `index.html` (vanilla JS) |
+| **Vercel UI** | SpiceRoute hub: hero imagery (Unsplash), per-pick covers (Picsum), shortlist, **donut loading overlay** while `POST /api/recommend` runs; Zomato-**inspired** tokens (not affiliated) | [`frontend-next/`](../frontend-next/) — `app/spiceroute.css`, [`SpiceResultBoard`](../frontend-next/components/SpiceResultBoard.tsx), etc. |
 
-The canonical frontend is served by the same FastAPI app (Phase 6 template + JS),
-so the product runs on a **single URL/port** in normal usage.
+In **single-port dev**, the Jinja UI is the default on **8765**. In **split** mode, **3000** (Next) is the primary consumer-facing UI; behaviour and APIs are unchanged.
 
 ```mermaid
 flowchart LR
@@ -189,12 +191,12 @@ flowchart TD
 **Delivered:** [`phase6/`](../phase6/README.md)
 - **Backend:** package `zomato_surface` — FastAPI app, `service`, `catalog`, `filter_options`, `api_schemas`
 - **HTTP:** `/`, `/static/*`, `/api/health`, `/api/filter-options`, `/api/recommend`, `/docs`
-- **Frontend (Railway `/`):** Jinja + `minimal.css` + inline JS — Next.js-style layout (matches Vercel light UI)
-- **Frontend (Vercel):** Next.js **SpiceRoute** hub in [`frontend-next/`](../frontend-next/) (`spiceroute.css`, shortlist, full studio)
+- **Frontend (Railway `/`):** Jinja + **`minimal.css`** — light two-column-style layout; copy for **app version**, **HF + LLM pipeline**, **`NEXT_PUBLIC_API_BASE_URL` / CORS**, and **Terms** lives here (not on Vercel).
+- **Frontend (Vercel):** Next.js **SpiceRoute** in [`frontend-next/`](../frontend-next/) — `spiceroute.css` (Zomato-inspired palette, DM Sans), hero + pick imagery (`next/image`, remote patterns in [`next.config.mjs`](../frontend-next/next.config.mjs)), **Preference Studio** includes **`additional_preferences`**; **shortlist** in `localStorage`; **donut overlay** on the recommendation board during submit.
 - Shared in-memory catalog for filter-options and recommend
-- Input constraints: `top_k` 1–5, `llm_candidate_cap` 200–300
+- Input constraints: `top_k` 1–5, `llm_candidate_cap` 200–300; **`additional_preferences`** optional on API (`RecommendRequest`)
 
-**Outcome:** proper **backend/frontend** split in one process: UI consumes JSON APIs; all business logic stays in Python.
+**Outcome:** UI surfaces (Jinja and/or Next) consume the same JSON APIs; **all business logic stays in Python**.
 
 ---
 
@@ -208,7 +210,7 @@ flowchart TD
 - **CORS:** API reads **`CORS_ORIGINS`** (comma-separated) and optional **`CORS_ORIGIN_REGEX`** (e.g. `*.vercel.app`) — see Deployment doc
 - **Secrets:** `OPENAI_API_KEY` / **`GROQ_API_KEY`** / optional **`HF_TOKEN`** in Railway variables (same semantics as local `phase6/.env`)
 
-**Outcome:** split deployment — Railway `/` = minimal Jinja UI; Vercel = SpiceRoute Next.js UI; both use the same JSON APIs.
+**Outcome:** split deployment — Railway `/` = minimal Jinja UI + operational/legal copy; Vercel = SpiceRoute Next.js UI (loading overlay, richer visuals, Privacy-only footer); both use the same JSON APIs.
 
 ---
 
@@ -232,7 +234,8 @@ phase6 (surface)
 - **Live LLM (backend → provider):** `OPENAI_API_KEY` and/or **`GROQ_API_KEY`** (see `zomato_llm.config`); when provider limits or key issues occur, the app returns smart local fallback explanations
 - **Optional for better HF rate limits:** `HF_TOKEN`
 - **Dataset scope note:** current source dataset values for `listed_in(city)` are predominantly Bangalore localities.
-- **Low memory:** catalog uses **streaming** ingest; optional **`ZOMATO_MAX_CATALOG_ROWS`** caps in-memory rows (see [`Deployment.md`](./Deployment.md)).
+- **Low memory:** catalog uses **streaming** ingest; on **Railway** an automatic default cap applies unless **`ZOMATO_FULL_CATALOG`** or **`ZOMATO_MAX_CATALOG_ROWS`** is set (see [`Deployment.md`](./Deployment.md)).
+- **Vercel UX:** while **`POST /api/recommend`** is in flight, the recommendation board shows a **donut spinner** overlay (`SpiceResultBoard` + `spiceroute.css`).
 
 ## Final phase summary
 
@@ -244,5 +247,5 @@ phase6 (surface)
 | 3 | Data standardization | Canonical model + normalization |
 | 4 | Deterministic relevance | Filter + shortlist ranking |
 | 5 | Language reasoning | Grounded LLM rank/explain + fallback |
-| 6 | Product delivery | **Backend** (FastAPI) + **frontend** (HTML/CSS/JS) + orchestration |
+| 6 | Product delivery | **Backend** (FastAPI) + **Jinja UI** (`minimal.css`) + optional **Next.js** (`frontend-next/`) + orchestration |
 | — | Production (optional) | **Railway** (API + same-origin UI) + **Vercel** (Next.js) — [`Deployment.md`](./Deployment.md) |

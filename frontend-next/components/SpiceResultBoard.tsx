@@ -5,6 +5,7 @@ import SpicePickCard, { ShortlistItem } from "@/components/SpicePickCard";
 
 type Props = {
   visible: boolean;
+  submitting: boolean;
   response: RecommendResponse | null;
   recommendError: string | null;
   shortlist: ShortlistItem[];
@@ -14,6 +15,7 @@ type Props = {
 
 export default function SpiceResultBoard({
   visible,
+  submitting,
   response,
   recommendError,
   shortlist,
@@ -30,7 +32,24 @@ export default function SpiceResultBoard({
 
   return (
     <section className="results-pane card" id="results-board">
+      {submitting ? (
+        <div
+          className="results-loading-overlay"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="donut-spinner-wrap">
+            <div className="donut-spinner" aria-hidden />
+            <p className="donut-label">Processing your picks…</p>
+          </div>
+          <span className="sr-only">Loading recommendations, please wait.</span>
+        </div>
+      ) : null}
       <h2>Recommendation Board</h2>
+      <p className="section-kicker">
+        Ranked picks, cost cues, and AI blurbs — save favourites to your shortlist.
+      </p>
       {recommendError ? <p className="error">{recommendError}</p> : null}
       {response ? (
         <p className="muted">

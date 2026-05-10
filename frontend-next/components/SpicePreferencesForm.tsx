@@ -68,6 +68,9 @@ export default function SpicePreferencesForm({
   return (
     <section className="prefs card">
       <h2>Preference Studio</h2>
+      <p className="section-kicker">
+        Same inputs as always — city, cuisine, budget, ratings, and shortlist size.
+      </p>
       {optionsError ? (
         <p className="error" role="alert">
           Could not load filter options: {optionsError}
@@ -166,11 +169,6 @@ export default function SpicePreferencesForm({
           </button>
         </div>
       </form>
-      <p className="hint">
-        The Hugging Face split is loaded by the API on first request and kept in memory, then
-        filtered by your choices. Up to your shortlist size (200–300) of the best-rated matches
-        go to the LLM for top picks.
-      </p>
       {options ? (
         <p className="hint muted">
           Options from {options.normalized_row_count.toLocaleString()} rows in{" "}

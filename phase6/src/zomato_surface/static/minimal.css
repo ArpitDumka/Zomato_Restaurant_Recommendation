@@ -207,3 +207,31 @@ input[type="text"] {
   padding: 0.05rem 0.3rem;
   border-radius: 4px;
 }
+.ver-meta {
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.ver-meta code {
+  font-size: 0.88em;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}
+.legal {
+  border-top: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.15);
+}
+.legal-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 1.25rem;
+}
+.legal-item {
+  font-size: 0.74rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.legal-item strong {
+  color: var(--text);
+}

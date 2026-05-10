@@ -21,8 +21,9 @@ AI-assisted restaurant discovery using the [ManikaSaini/zomato-restaurant-recomm
 .\run.ps1 -Surface
 ```
 
-Open **http://127.0.0.1:8765/**. This is the canonical UI + backend URL in one process.
-The first request scans the full HF split (cached after download) and may take a while.
+Open **http://127.0.0.1:8765/**. This is the canonical **API + minimal Jinja UI** in one process.
+Optional: run **Next.js** from [`frontend-next/`](frontend-next/) on **3000** for the SpiceRoute UI (see [`Docs/Deployment.md`](Docs/Deployment.md)).
+The first request materializes the HF catalog (cached after download; **Railway** may cap rows) and may take a while.
 
 **Preview web UI (Phase 1)** — status + raw sample rows only:
 

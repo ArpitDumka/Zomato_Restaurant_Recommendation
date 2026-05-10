@@ -35,9 +35,14 @@ Open **http://127.0.0.1:8765/**.
 
 This is the **single canonical app URL** for Phase 6 (UI + backend API in one process).
 
+## UI (this package)
+
+- **Templates:** [`src/zomato_surface/templates/index.html`](src/zomato_surface/templates/index.html) — Jinja form + results (minimal layout).
+- **Styles:** [`src/zomato_surface/static/minimal.css`](src/zomato_surface/static/minimal.css) — theme for `/`. (`style.css` is a reference / Spice theme used by the Next.js copy, not linked from Jinja.)
+
 ## API
 
-- `POST /api/recommend` — body: `city`, `cuisine_query`, `min_rating`, `budget_band`, `top_k` (1–5), `llm_candidate_cap` (200–300 shortlist; see `api_schemas.RecommendRequest`).
+- `POST /api/recommend` — body: `city`, `cuisine_query`, optional **`additional_preferences`**, `min_rating`, `budget_band`, `top_k` (1–5), `llm_candidate_cap` (200–300 shortlist; see `api_schemas.RecommendRequest`).
 - `GET /api/filter-options` — dropdown values from the materialized catalog (`?refresh=true` to reload from Hub).
 - `GET /api/health` — liveness.
 
@@ -50,7 +55,7 @@ ruff check src tests
 
 ## Pipeline (what happens on each request)
 
-1. **First request** (or `/api/filter-options`): **materialize** the full HF split with `load_materialized_split` (~52k rows), **normalize** once, and keep the catalog in memory (`zomato_surface.catalog`).
+1. **First request** (or `/api/filter-options`): **materialize** the HF split (full **~52k** locally; on **Railway** a default row cap may apply unless overridden — see [`Docs/Deployment.md`](../Docs/Deployment.md)), **normalize** once, and keep the catalog in memory (`zomato_surface.catalog`).
 2. **Each recommend**: **filter** in memory with `UserPreferences`.
 3. **Shortlist** to at most `llm_candidate_cap` (200–300) by rating (`rank_by_rating_cap`).
 4. **LLM** returns up to `top_k` picks (default 5) with JSON validation + fallback (`rank_and_explain`).

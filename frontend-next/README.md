@@ -36,8 +36,9 @@ Base URL: **`NEXT_PUBLIC_API_BASE_URL`** in `.env.local` (local) or Vercel proje
 
 ## What this app includes
 
-- **SpiceRoute Select** UI (top bar, hero, Preference Studio, recommendation board, shortlist in `localStorage`)
-- LLM pill in the header
-- Loading, empty, and error states
+- **SpiceRoute** shell with a **Zomato-inspired** visual system (brand red `#E23744`, warm canvas, soft cards, [DM Sans](https://fonts.google.com/specimen/DM+Sans)) — educational demo only, **not** affiliated with [Zomato](https://www.zomato.com/).
+- Full-bleed **hero** (Unsplash food photography) and **per-pick cover images** (seeded via [Picsum](https://picsum.photos/) from each `restaurant_id`; domains allowed in `next.config.mjs`).
+- **Donut loading overlay** on the recommendation board while `POST /api/recommend` is in flight (`SpiceResultBoard` + `app/spiceroute.css`).
+- Same API behaviour: Preference Studio (including **additional preferences**), shortlist in `localStorage`, LLM badge in the header. Operational copy (HF pipeline, deploy vars, **Terms**) is intentionally on the **Railway** Jinja page — see [`Docs/PhaseWiseArchitecture.md`](../Docs/PhaseWiseArchitecture.md).
 
-The **Railway** root URL uses a lighter **Next.js-style** single-column UI; deploy this folder to **Vercel** for the full SpiceRoute experience.
+The **Railway** root URL uses a minimal **Next.js-style** single-column Jinja UI; deploy this folder to **Vercel** for the rich SpiceRoute experience.
