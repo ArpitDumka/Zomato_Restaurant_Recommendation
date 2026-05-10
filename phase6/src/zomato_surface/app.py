@@ -54,8 +54,14 @@ def create_app() -> FastAPI:
         if warm_catalog_at_startup():
             _log.info("catalog warmup starting")
             loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, get_catalog)
-            _log.info("catalog warmup complete")
+            try:
+                await loop.run_in_executor(None, get_catalog)
+            except Exception:
+                _log.exception(
+                    "catalog warmup failed; API will retry on first catalog access",
+                )
+            else:
+                _log.info("catalog warmup complete")
         yield
 
     app = FastAPI(

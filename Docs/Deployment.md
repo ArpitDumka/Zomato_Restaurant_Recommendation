@@ -36,7 +36,7 @@ Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so th
 | `ZOMATO_RAILWAY_DEFAULT_CAP` | Optional; overrides the Railway-only default cap (min 1000, max 500000). Raise (e.g. **20000**) if you add RAM |
 | `ZOMATO_FULL_CATALOG` | Set to `1` on a **large** Railway instance to load the full ~52k rows (no cap) |
 | `ZOMATO_HF_STREAMING` | **`1`** = stream HF (lower peak RAM). **`0`** = materialized Arrow (faster after cache). On **Railway**, default **`1`**; locally, default **`0`** |
-| `ZOMATO_CATALOG_WARMUP` | On **Railway**, default **on**: load catalog during startup so `/api/filter-options` is not the first heavy work. Set **`0`** to skip (faster boot; first request pays the cost) |
+| `ZOMATO_CATALOG_WARMUP` | Set **`1`** to load the catalog during startup (first UI request is faster). Default **off** so deploy/health succeed immediately; the first `/api/filter-options` may take 1–3 minutes on a cold Hugging Face cache |
 | `ZOMATO_FILTER_MAX_CITIES` | Optional; max city dropdown entries (frequency order). Unset = **all** cities from the split |
 | `ZOMATO_FILTER_MAX_CUISINES` | Optional; max cuisine dropdown entries. Unset = **all** cuisines |
 
@@ -44,6 +44,8 @@ The catalog does **one** pass over the split (normalize up to the cap, then ligh
 
 5. [ ] **Deploy**, then open **Settings → Networking → Generate Domain** (or attach your domain). Copy the **HTTPS** URL (**no trailing slash**).
 6. [ ] Smoke test: `https://<your-railway-host>/api/health` → JSON with `"ok": true`.
+
+**If the Vercel UI shows “Failed to fetch” for filter options:** (1) Confirm **`NEXT_PUBLIC_API_BASE_URL`** is the Railway **https** URL (no trailing slash). (2) Set **`CORS_ORIGIN_REGEX`** on Railway (see table) or add your exact Vercel origin to **`CORS_ORIGINS`**. (3) Open the Railway **`/api/health`** and **`/api/filter-options`** URLs directly; if the latter hangs, check logs (HF download / memory). The Next app retries filter-options for several minutes to cover cold starts.
 
 **Note:** `https://<host>/` on Railway serves a **minimal** Phase 6 UI (`minimal.css`): version line, HF/LLM pipeline copy, deploy (`NEXT_PUBLIC_API_BASE_URL` / CORS), and **Terms**. **[Vercel](https://vercel.com/)** serves the **SpiceRoute** hub (Zomato-inspired visuals, hero + pick images, **additional preferences**, shortlist, **donut loading overlay** during recommend; Privacy in footer). Both call the same API.
 

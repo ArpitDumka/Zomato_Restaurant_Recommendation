@@ -50,18 +50,17 @@ def _running_on_railway() -> bool:
 
 def warm_catalog_at_startup() -> bool:
     """
-    Load the catalog during app startup (async executor) so the first HTTP client
-    does not hit a long blocking load or worker kill mid-request.
+    Load the catalog during app startup (async executor).
 
-    On Railway, default **on**. Set ``ZOMATO_CATALOG_WARMUP=0`` to skip (faster
-    process boot; first API call pays the load cost).
+    Default **off** so the process binds and ``/api/health`` returns quickly
+    (Railway deploy + health checks). Set ``ZOMATO_CATALOG_WARMUP=1`` on Railway
+    after the service is stable if you want the first browser request to skip the
+    cold catalog load.
     """
     raw = os.environ.get("ZOMATO_CATALOG_WARMUP", "").strip().lower()
-    if raw in ("0", "false", "no", "off"):
-        return False
     if raw in ("1", "true", "yes", "on"):
         return True
-    return _running_on_railway()
+    return False
 
 
 def _catalog_row_cap() -> tuple[int | None, str | None]:
