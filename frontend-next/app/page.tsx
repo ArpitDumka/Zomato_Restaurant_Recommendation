@@ -1,9 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import LlmStatusBadge from "@/components/LlmStatusBadge";
-import PreferencesForm from "@/components/PreferencesForm";
-import ResultCard from "@/components/ResultCard";
+import { useCallback, useEffect, useState } from "react";
+import packageJson from "../package.json";
+import SpiceHero from "@/components/SpiceHero";
+import SpicePreferencesForm from "@/components/SpicePreferencesForm";
+import SpiceResultBoard from "@/components/SpiceResultBoard";
+import SpiceTopBar from "@/components/SpiceTopBar";
+import { ShortlistItem } from "@/components/SpicePickCard";
 import { getApiBase, getFilterOptions, recommend } from "@/lib/api";
 import {
   FilterOptionsResponseOk,
@@ -11,13 +14,37 @@ import {
   RecommendResponse,
 } from "@/lib/types";
 
+const SHORTLIST_KEY = "zomato_shortlist_v1";
+
+function readShortlist(): ShortlistItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(SHORTLIST_KEY);
+    const data = raw ? JSON.parse(raw) : [];
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeShortlist(items: ShortlistItem[]) {
+  localStorage.setItem(SHORTLIST_KEY, JSON.stringify(items));
+}
+
 export default function HomePage() {
   const [options, setOptions] = useState<FilterOptionsResponseOk | null>(null);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [optionsError, setOptionsError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [recommendError, setRecommendError] = useState<string | null>(null);
   const [response, setResponse] = useState<RecommendResponse | null>(null);
+  const [boardVisible, setBoardVisible] = useState(false);
+  const [activeNav, setActiveNav] = useState<"discover" | "shortlist">("discover");
+  const [shortlist, setShortlist] = useState<ShortlistItem[]>([]);
+
+  useEffect(() => {
+    setShortlist(readShortlist());
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -37,117 +64,124 @@ export default function HomePage() {
     };
   }, []);
 
+  const result = response?.result ?? null;
+  const llmUsed = submitting ? null : result?.used_llm ?? null;
+
+  const isShortlisted = useCallback(
+    (id: string) => shortlist.some((x) => x.restaurant_id === id),
+    [shortlist],
+  );
+
+  const toggleShortlist = useCallback((item: ShortlistItem) => {
+    const current = readShortlist();
+    const idx = current.findIndex((x) => x.restaurant_id === item.restaurant_id);
+    let next: ShortlistItem[];
+    if (idx >= 0) {
+      next = [...current.slice(0, idx), ...current.slice(idx + 1)];
+    } else {
+      next = [item, ...current].slice(0, 20);
+    }
+    writeShortlist(next);
+    setShortlist(next);
+  }, []);
+
+  const onNavigate = useCallback((target: "discover" | "shortlist") => {
+    setActiveNav(target);
+    if (target === "shortlist") {
+      setBoardVisible(true);
+      requestAnimationFrame(() => {
+        document.getElementById("results-board")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    } else {
+      requestAnimationFrame(() => {
+        document.getElementById("discover")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      });
+    }
+    if (typeof window !== "undefined") {
+      const hash = target === "shortlist" ? "shortlist" : "discover";
+      window.history.replaceState(null, "", `#${hash}`);
+    }
+  }, []);
+
   async function submit(body: RecommendRequestBody) {
     setSubmitting(true);
-    setError(null);
+    setRecommendError(null);
     setResponse(null);
+    setBoardVisible(true);
     try {
       const data = await recommend(body);
       setResponse(data);
       if (!data.ok && data.error) {
-        setError(data.error);
+        setRecommendError(data.error);
       }
     } catch (e) {
-      setError(String(e));
+      setRecommendError(String(e));
     } finally {
       setSubmitting(false);
     }
   }
 
-  const result = response?.result ?? null;
-  const llmUsed = submitting ? null : result?.used_llm ?? null;
-
   return (
     <>
-      <header className="header">
-        <div className="inner">
-          <h1>
-            Restaurant recommendations <span className="tag">Next.js</span>
-          </h1>
-          <p className="lead">
-            Full pipeline: Hugging Face data {"->"} filters {"->"} LLM top picks
-            (grounded).
-          </p>
-          <p className="ver">
-            Frontend on Next.js · API: {getApiBase()} · LLM{" "}
-            <LlmStatusBadge
-              usedLlm={llmUsed}
-              fallbackReason={result?.fallback_reason}
-              loading={submitting}
-            />
-          </p>
-        </div>
-      </header>
-
+      <SpiceTopBar
+        activeNav={activeNav}
+        onNavigate={onNavigate}
+        usedLlm={llmUsed}
+        fallbackReason={result?.fallback_reason}
+        llmLoading={submitting}
+      />
       <main className="main">
-        <section className="card">
-          <h2>Your preferences</h2>
-          {optionsError && (
-            <p className="error" role="alert">
-              Could not load filter options: {optionsError}
-            </p>
-          )}
-          <PreferencesForm
+        <SpiceHero appVersion={packageJson.version} />
+        <section className="layout">
+          <SpicePreferencesForm
             options={options}
             loadingOptions={loadingOptions}
             submitting={submitting}
+            optionsError={optionsError}
             onSubmit={submit}
           />
-          <p className="hint">
-            The FastAPI backend (Railway in production) materializes an in-memory catalog on
-            the first request and reuses it. The row count below is whatever the server loaded
-            (hosting may cap rows on small instances — see{" "}
-            <code>Docs/Deployment.md</code>).
-          </p>
-          {options && (
-            <p className="hint muted">
-              Options from {options.normalized_row_count.toLocaleString()} rows in{" "}
-              {options.scan_seconds}s
-            </p>
-          )}
-        </section>
-
-        <section className="card">
-          <h2>Result</h2>
-          {error && <p className="error">{error}</p>}
-          {response && (
-            <p className="muted">
-              Matched {response.matched_count} rows · sent {response.capped_count} to model
-            </p>
-          )}
-
-          {response?.message && <div className="empty">{response.message}</div>}
-          {result?.summary && <p className="summary">{result.summary}</p>}
-
-          {result?.picks && result.picks.length > 0 ? (
-            <ul className="results">
-              {result.picks.map((pick) => (
-                <ResultCard key={`${pick.restaurant_id}-${pick.rank}`} pick={pick} />
-              ))}
-            </ul>
-          ) : (
-            !submitting &&
-            response &&
-            !response.message &&
-            !error && <div className="empty">No picks returned.</div>
-          )}
+          <SpiceResultBoard
+            visible={boardVisible}
+            response={response}
+            recommendError={recommendError}
+            shortlist={shortlist}
+            onToggleShortlist={toggleShortlist}
+            isShortlisted={isShortlisted}
+          />
         </section>
       </main>
-
       <footer className="footer">
         <a href={`${getApiBase()}/docs`} target="_blank" rel="noreferrer">
-          API docs
+          API Docs
         </a>{" "}
         ·{" "}
         <a href={`${getApiBase()}/api/health`} target="_blank" rel="noreferrer">
-          API health
-        </a>
+          System Health
+        </a>{" "}
+        · <a href="#privacy">Privacy</a> · <a href="#terms">Terms</a>
         <span className="footer-note">
-          {" "}
-          · Vercel: set <code>NEXT_PUBLIC_API_BASE_URL</code> to this API origin; Railway: CORS
-          for <code>*.vercel.app</code> (see repo <code>Docs/Deployment.md</code>).
+          Vercel: <code>NEXT_PUBLIC_API_BASE_URL</code> → Railway API · Railway: CORS for{" "}
+          <code>*.vercel.app</code> (<code>Docs/Deployment.md</code>).
         </span>
       </footer>
+      <section className="legal">
+        <div className="legal-inner">
+          <div id="privacy" className="legal-item">
+            <strong>Privacy</strong>: We do not store personal profile data in this UI;
+            recommendations are computed from your current session inputs.
+          </div>
+          <div id="terms" className="legal-item">
+            <strong>Terms</strong>: Recommendation text is assistive and may use fallback logic
+            when model limits are hit.
+          </div>
+        </div>
+      </section>
     </>
   );
 }

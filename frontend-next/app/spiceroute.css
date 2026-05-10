@@ -1,4 +1,4 @@
-/* SpiceRoute theme — used by Next.js (frontend-next/app/spiceroute.css). Railway Jinja UI uses minimal.css. */
+/* SpiceRoute UI (matches Phase 6 Jinja / Railway hub). Hero asset: /zomato-bg.svg */
 :root {
   --bg: #070f25;
   --bg2: #081534;
@@ -11,7 +11,9 @@
   --glow: #2fbcff;
   font-family: "Segoe UI", system-ui, sans-serif;
 }
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 body {
   margin: 0;
   background: radial-gradient(1200px 450px at 50% -5%, #13255a, var(--bg));
@@ -36,7 +38,11 @@ body {
   color: #ffba89;
   letter-spacing: 0.01em;
 }
-.nav { display: flex; gap: 1.8rem; font-size: 0.92rem; }
+.nav {
+  display: flex;
+  gap: 1.8rem;
+  font-size: 0.92rem;
+}
 .nav-btn {
   background: transparent;
   border: 0;
@@ -77,10 +83,26 @@ body {
   font-weight: 800;
   letter-spacing: 0.04em;
 }
-.hero h1 { margin: 0 0 0.6rem; font-size: clamp(1.7rem, 4vw, 3rem); line-height: 1.1; }
-.lead { margin: 0; color: var(--muted); max-width: 45rem; }
-.hero-meta { margin: 0.8rem 0 0; color: #aec0e5; font-size: 0.86rem; }
-.main { max-width: 1260px; margin: 0 auto; padding: 1.25rem; }
+.hero h1 {
+  margin: 0 0 0.6rem;
+  font-size: clamp(1.7rem, 4vw, 3rem);
+  line-height: 1.1;
+}
+.lead {
+  margin: 0;
+  color: var(--muted);
+  max-width: 45rem;
+}
+.hero-meta {
+  margin: 0.8rem 0 0;
+  color: #aec0e5;
+  font-size: 0.86rem;
+}
+.main {
+  max-width: 1260px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
 .card {
   background: linear-gradient(180deg, #0f1f43, #0b1734);
   border: 1px solid var(--line);
@@ -95,36 +117,56 @@ body {
   margin-top: 0.55rem;
   background:
     linear-gradient(to bottom, rgba(4, 8, 16, 0.12), rgba(4, 8, 16, 0.12)),
-    url("/static/zomato-bg.svg"),
+    url("/zomato-bg.svg"),
     linear-gradient(to bottom, rgba(6, 10, 22, 0.45), rgba(4, 9, 22, 0.66)),
     radial-gradient(800px 280px at 50% 30%, rgba(255, 140, 55, 0.22), transparent 65%),
     linear-gradient(120deg, #1a1d29, #0c182f 45%, #0b1a37);
   background-size: cover, cover, cover, cover, cover;
   background-position: center;
 }
-.hero-content { text-align: center; padding: 0.8rem 1.2rem; }
+.hero-content {
+  text-align: center;
+  padding: 0.8rem 1.2rem;
+}
 .layout {
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 1rem;
 }
-.prefs { align-self: start; }
-.results-pane { min-height: 520px; }
-.card h2 { margin: 0 0 0.9rem; font-size: 1.8rem; color: #f0f5ff; }
+.prefs {
+  align-self: start;
+}
+.results-pane {
+  min-height: 520px;
+}
+.card h2 {
+  margin: 0 0 0.9rem;
+  font-size: 1.8rem;
+  color: #f0f5ff;
+}
 .grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
 }
-label { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.82rem; color: var(--muted); }
-input, select {
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+input,
+select {
   padding: 0.6rem 0.65rem;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: #0a1633;
   color: var(--text);
 }
-.actions { grid-column: 1 / -1; }
+.actions {
+  grid-column: 1 / -1;
+}
 .btn {
   width: 100%;
   padding: 0.72rem 1rem;
@@ -135,14 +177,37 @@ input, select {
   font-weight: 700;
   cursor: pointer;
 }
-.btn.primary { background: linear-gradient(180deg, #ff972a, #ff6d2f); border-color: #ff8b2b; color: #1e0d04; }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; }
-.hint { font-size: 0.76rem; color: var(--muted); margin: 0.72rem 0 0; }
-.muted { color: var(--muted); }
-.hidden { display: none !important; }
-.error { color: #fca5a5; white-space: pre-wrap; }
-.summary { color: #9be8d0; font-weight: 600; }
-.empty { color: var(--muted); }
+.btn.primary {
+  background: linear-gradient(180deg, #ff972a, #ff6d2f);
+  border-color: #ff8b2b;
+  color: #1e0d04;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.hint {
+  font-size: 0.76rem;
+  color: var(--muted);
+  margin: 0.72rem 0 0;
+}
+.muted {
+  color: var(--muted);
+}
+.hidden {
+  display: none !important;
+}
+.error {
+  color: #fca5a5;
+  white-space: pre-wrap;
+}
+.summary {
+  color: #9be8d0;
+  font-weight: 600;
+}
+.empty {
+  color: var(--muted);
+}
 .llm-badge {
   display: inline-block;
   margin-left: 0.15rem;
@@ -166,7 +231,15 @@ input, select {
   color: var(--text);
   background: #1f2937;
 }
-.results { list-style: none; padding: 0; margin: 0.75rem 0 0; }
+.ai-pill .llm-badge {
+  font-size: 0.68rem;
+  margin-left: 0.1rem;
+}
+.results {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+}
 .pick {
   display: block;
   border: 1px solid var(--line);
@@ -175,7 +248,11 @@ input, select {
   margin-bottom: 0.65rem;
   background: linear-gradient(180deg, rgba(9, 22, 51, 0.78), rgba(8, 20, 45, 0.88));
 }
-.pick-body { display: flex; flex-direction: column; gap: 0.38rem; }
+.pick-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
 .pick-top {
   display: flex;
   justify-content: space-between;
@@ -193,8 +270,16 @@ input, select {
   color: #ffcda8;
   font-weight: 700;
 }
-.title { font-weight: 700; font-size: 1.24rem; line-height: 1.2; }
-.meta2 { font-size: 0.86rem; color: var(--muted); margin: 0; }
+.title {
+  font-weight: 700;
+  font-size: 1.24rem;
+  line-height: 1.2;
+}
+.meta2 {
+  font-size: 0.86rem;
+  color: var(--muted);
+  margin: 0;
+}
 .insight {
   display: inline-flex;
   align-items: center;
@@ -247,22 +332,53 @@ input, select {
   font-size: 1.05rem;
   color: #e2ecff;
 }
-.footer { text-align: center; padding: 1rem; font-size: 0.85rem; color: var(--muted); }
-.footer a { color: var(--accent); text-decoration: none; }
+.footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.footer-note {
+  display: block;
+  margin: 0.65rem auto 0;
+  max-width: 40rem;
+  line-height: 1.45;
+  font-size: 0.8rem;
+}
+.footer code {
+  font-size: 0.88em;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}
 .legal {
   border-top: 1px solid var(--line);
   background: rgba(4, 10, 24, 0.45);
 }
 .legal-inner {
+  max-width: 1260px;
+  margin: 0 auto;
   padding: 0.8rem 1.25rem 1.1rem;
   display: grid;
   gap: 0.35rem;
   color: var(--muted);
   font-size: 0.74rem;
 }
-.legal-item strong { color: #d3def7; }
-code { background: rgba(0,0,0,0.35); padding: 0.1rem 0.35rem; border-radius: 4px; }
+.legal-item strong {
+  color: #d3def7;
+}
+code {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
 
 @media (max-width: 980px) {
-  .layout { grid-template-columns: 1fr; }
+  .layout {
+    grid-template-columns: 1fr;
+  }
 }

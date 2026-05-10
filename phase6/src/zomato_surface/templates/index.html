@@ -3,64 +3,44 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Restaurant recommendation hub</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <title>Restaurant recommendations</title>
+  <link rel="stylesheet" href="/static/minimal.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">SpiceRoute Select</div>
-      <nav class="nav">
-        <button type="button" class="nav-btn active" data-nav-target="discover">Discover</button>
-        <button type="button" class="nav-btn" data-nav-target="shortlist">Shortlist</button>
-      </nav>
-      <div class="ai-pill">
-        <span class="dot"></span> AI
-        <span id="llm-status" class="llm-badge llm-unknown" title="Updates after each recommendation">Idle</span>
-      </div>
+  <header class="header">
+    <div class="inner">
+      <h1>Restaurant recommendations <span class="tag">Phase 6</span></h1>
+      <p class="lead">
+        Full pipeline: Hugging Face data → filters → LLM top picks (grounded).
+      </p>
+      <p class="ver">
+        API host: <strong id="api-origin"></strong> · LLM
+        <span id="hdr-llm" class="llm-badge llm-unknown">Idle</span>
+      </p>
     </div>
   </header>
 
   <main class="main">
-    <section class="hero card" id="discover">
-      <div class="hero-content">
-        <h1>Your Next Favorite Meal, Instantly</h1>
-        <p>
-          Discover top dining picks tailored to your taste, with smart AI reasons,
-          trusted ratings, and budget clarity in one sleek view.
-        </p>
-        <p class="hero-meta">App <code>{{ app_version }}</code> · Live on <strong>8765</strong></p>
-      </div>
-    </section>
-
-    <section class="layout">
-      <section class="prefs card">
-        <h2>Preference Studio</h2>
-        <form id="f" class="grid">
+    <section class="card">
+      <h2>Your preferences</h2>
+      <p class="error hidden" id="opts-err" role="alert"></p>
+      <form id="f" class="grid">
         <label>City (listed_in)
           <select name="city" id="sel-city" disabled>
             <option value="">Loading dataset…</option>
           </select>
         </label>
-        <label>Cuisine (token from dataset)
+        <label>Cuisine (token)
           <select name="cuisine_query" id="sel-cuisine" disabled>
             <option value="">Loading dataset…</option>
           </select>
-        </label>
-        <label>Additional preferences
-          <input
-            type="text"
-            name="additional_preferences"
-            maxlength="300"
-            placeholder="e.g. rooftop seating, family-friendly, quiet place"
-          />
         </label>
         <label>Min rating
           <select name="min_rating" id="sel-rating" disabled>
             <option value="">Loading dataset…</option>
           </select>
         </label>
-        <label>Budget band (INR for two)
+        <label>Budget band
           <select name="budget_band" id="sel-budget" disabled>
             <option value="">Loading dataset…</option>
           </select>
@@ -72,7 +52,7 @@
             {% endfor %}
           </select>
         </label>
-        <label>Shortlist size (max candidates to LLM)
+        <label>Shortlist size
           <select name="llm_candidate_cap">
             {% for cap in llm_cap_options %}
             <option value="{{ cap }}"{% if cap == 250 %} selected{% endif %}>{{ cap }}</option>
@@ -80,57 +60,40 @@
           </select>
         </label>
         <div class="actions">
-          <button type="submit" class="btn primary" id="go" disabled>Get Recommendations</button>
+          <button type="submit" class="btn primary" id="go" disabled>Get recommendations</button>
         </div>
       </form>
-      <p class="hint" id="opts-hint">
-        The full Hugging Face split (~52k rows) is downloaded once, kept in memory, then filtered by your choices. Up to your shortlist size (200–300) of the best-rated matches go to the LLM, which returns your top picks.
+      <p class="hint">
+        The FastAPI backend materializes an in-memory catalog on the first request and reuses it.
+        Row count below reflects what this server loaded (hosting may cap rows on small instances —
+        see <code>Docs/Deployment.md</code>).
       </p>
       <p class="hint muted" id="opts-meta"></p>
-      </section>
+    </section>
 
-      <section class="results-pane card hidden" id="status-card">
-        <div id="shortlist"></div>
-        <h2>Recommendation Board</h2>
-        <p id="meta" class="muted"></p>
-        <p id="summary" class="summary hidden"></p>
-        <p id="err" class="error hidden"></p>
-        <div id="empty" class="empty hidden">No matches. Try broader filters.</div>
-        <ul id="list" class="results"></ul>
-        <section class="shortlist-tools">
-          <h3>Shortlist</h3>
-          <p class="hint muted">Saved picks are visible here and kept in your browser.</p>
-          <ul id="shortlist-list" class="shortlist-list">
-            <li class="muted">No shortlisted restaurants yet.</li>
-          </ul>
-        </section>
-      </section>
+    <section class="card">
+      <h2>Result</h2>
+      <p class="error hidden" id="err"></p>
+      <p class="muted hidden" id="meta"></p>
+      <p class="summary hidden" id="summary"></p>
+      <div class="empty hidden" id="empty"></div>
+      <ul id="list" class="results"></ul>
     </section>
   </main>
 
   <footer class="footer">
-    <a href="/docs" target="_blank" rel="noreferrer">API Docs</a>
-    &middot;
-    <a href="/api/health" target="_blank" rel="noreferrer">System Health</a>
-    &middot;
-    <a href="#privacy">Privacy</a>
-    &middot;
-    <a href="#terms">Terms</a>
+    <a href="/docs" target="_blank" rel="noreferrer">API docs</a>
+    ·
+    <a href="/api/health" target="_blank" rel="noreferrer">API health</a>
+    <span class="footer-note">
+      Same UI theme as the Next.js app on Vercel. For split deploy: set
+      <code>NEXT_PUBLIC_API_BASE_URL</code> on Vercel and CORS on this API (<code>Docs/Deployment.md</code>).
+    </span>
   </footer>
-  <section class="legal">
-    <div class="inner legal-inner">
-      <div id="privacy" class="legal-item">
-        <strong>Privacy</strong>: We do not store personal profile data in this UI;
-        recommendations are computed from your current session inputs.
-      </div>
-      <div id="terms" class="legal-item">
-        <strong>Terms</strong>: Recommendation text is assistive and may use fallback
-        logic when model limits are hit.
-      </div>
-    </div>
-  </section>
 
   <script>
+    document.getElementById("api-origin").textContent = location.origin;
+
     function show(el, on) { el.classList.toggle("hidden", !on); }
 
     function titleCaseWords(s) {
@@ -154,15 +117,49 @@
       selectEl.disabled = false;
     }
 
+    function setHdrLlmIdle() {
+      const b = document.getElementById("hdr-llm");
+      if (!b) return;
+      b.className = "llm-badge llm-unknown";
+      b.textContent = "Idle";
+    }
+
+    function setHdrLlmLoading() {
+      const b = document.getElementById("hdr-llm");
+      if (!b) return;
+      b.className = "llm-badge llm-unknown";
+      b.textContent = "…";
+    }
+
+    function setHdrLlmFromResult(res) {
+      const b = document.getElementById("hdr-llm");
+      if (!b) return;
+      b.classList.remove("llm-on", "llm-off", "llm-unknown");
+      if (res && res.used_llm === true) {
+        b.textContent = "ON";
+        b.classList.add("llm-on");
+        return;
+      }
+      if (res && res.used_llm === false) {
+        b.textContent = "OFF" + (res.fallback_reason ? " (" + res.fallback_reason + ")" : "");
+        b.classList.add("llm-off");
+        return;
+      }
+      b.textContent = "Idle";
+      b.classList.add("llm-unknown");
+    }
+
     async function loadFilterOptions() {
       const go = document.getElementById("go");
       const meta = document.getElementById("opts-meta");
+      const oerr = document.getElementById("opts-err");
       const city = document.getElementById("sel-city");
       const cuisine = document.getElementById("sel-cuisine");
       const rating = document.getElementById("sel-rating");
       const budget = document.getElementById("sel-budget");
+      show(oerr, false);
       go.disabled = true;
-      meta.textContent = "Loading filter options (full dataset scan on first request)…";
+      meta.textContent = "Loading filter options (first request may take a while)…";
       try {
         const r = await fetch("/api/filter-options");
         const text = await r.text();
@@ -171,7 +168,7 @@
           d = text ? JSON.parse(text) : {};
         } catch {
           throw new Error(
-            (text && text.slice(0, 280)) || r.statusText || "Non-JSON response from /api/filter-options",
+            (text && text.slice(0, 280)) || r.statusText || "Non-JSON from /api/filter-options",
           );
         }
         if (!r.ok || !d.ok) {
@@ -179,26 +176,12 @@
           const detailMsg = Array.isArray(detail)
             ? detail.map((x) => x.msg || x).join("; ")
             : detail;
-          throw new Error(
-            d.error || detailMsg || r.statusText || "filter-options failed",
-          );
+          throw new Error(d.error || detailMsg || r.statusText || "filter-options failed");
         }
         fillSelect(city, d.cities, "Any city", (x) => x, (x) => x);
-        fillSelect(
-          cuisine,
-          d.cuisines,
-          "Any cuisine",
-          (x) => x,
-          (x) => titleCaseWords(x),
-        );
+        fillSelect(cuisine, d.cuisines, "Any cuisine", (x) => x, (x) => titleCaseWords(x));
         const ratings = (d.min_ratings || []).map((x) => Number(x));
-        fillSelect(
-          rating,
-          ratings,
-          "Any rating",
-          (x) => String(x),
-          (x) => `${x}+`,
-        );
+        fillSelect(rating, ratings, "Any rating", (x) => String(x), (x) => `${x}+`);
         budget.innerHTML = "";
         const bAny = document.createElement("option");
         bAny.value = "";
@@ -214,153 +197,23 @@
         const cmin = d.cost_for_two_inr_min;
         const cmax = d.cost_for_two_inr_max;
         const costHint =
-          cmin != null && cmax != null
-            ? ` · Observed cost (two): ${cmin}–${cmax} INR`
-            : "";
+          cmin != null && cmax != null ? ` · Observed cost (two): ${cmin}–${cmax} INR` : "";
         meta.textContent =
           `Options from ${d.normalized_row_count.toLocaleString()} rows in ${d.scan_seconds}s` +
           costHint;
         go.disabled = false;
       } catch (e) {
         meta.textContent = "";
+        show(oerr, true);
+        oerr.textContent = String(e);
         city.innerHTML = "<option value=\"\">Failed to load</option>";
         cuisine.innerHTML = "<option value=\"\">Failed to load</option>";
         rating.innerHTML = "<option value=\"\">Failed to load</option>";
         budget.innerHTML = "<option value=\"\">Failed to load</option>";
-        alert("Could not load /api/filter-options: " + e);
       }
     }
 
     loadFilterOptions();
-    setLlmBadgeIdle();
-    bindNavActions();
-    renderShortlist();
-    normalizeInitialRoute();
-
-    const shortlistStoreKey = "zomato_shortlist_v1";
-
-    function bindNavActions() {
-      const navButtons = document.querySelectorAll(".nav-btn[data-nav-target]");
-      for (const btn of navButtons) {
-        btn.addEventListener("click", () => {
-          const target = btn.getAttribute("data-nav-target");
-          activateNav(target);
-          if (target === "shortlist") {
-            const status = document.getElementById("status-card");
-            if (status && status.classList.contains("hidden")) {
-              show(status, true);
-            }
-            renderShortlist();
-          }
-          const section = document.getElementById(target);
-          if (section) {
-            section.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
-          history.replaceState(null, "", `#${target}`);
-        });
-      }
-    }
-
-    function normalizeInitialRoute() {
-      const route = (location.hash || "").replace("#", "");
-      if (route === "shortlist") {
-        history.replaceState(null, "", "#discover");
-      }
-      activateNav("discover");
-      const discover = document.getElementById("discover");
-      if (discover) {
-        discover.scrollIntoView({ behavior: "auto", block: "start" });
-      }
-    }
-
-    function activateNav(target) {
-      const navButtons = document.querySelectorAll(".nav-btn[data-nav-target]");
-      for (const b of navButtons) {
-        b.classList.toggle("active", b.getAttribute("data-nav-target") === target);
-      }
-    }
-
-    function getShortlist() {
-      try {
-        const raw = localStorage.getItem(shortlistStoreKey);
-        const data = raw ? JSON.parse(raw) : [];
-        return Array.isArray(data) ? data : [];
-      } catch {
-        return [];
-      }
-    }
-
-    function setShortlist(items) {
-      localStorage.setItem(shortlistStoreKey, JSON.stringify(items));
-      renderShortlist();
-    }
-
-    function toggleShortlist(item) {
-      const current = getShortlist();
-      const idx = current.findIndex((x) => x.restaurant_id === item.restaurant_id);
-      if (idx >= 0) {
-        current.splice(idx, 1);
-      } else {
-        current.unshift(item);
-      }
-      setShortlist(current.slice(0, 20));
-    }
-
-    function isShortlisted(restaurantId) {
-      return getShortlist().some((x) => x.restaurant_id === restaurantId);
-    }
-
-    function renderShortlist() {
-      const list = document.getElementById("shortlist-list");
-      const items = getShortlist();
-      if (!items.length) {
-        list.innerHTML = '<li class="muted">No shortlisted restaurants yet.</li>';
-        return;
-      }
-      list.innerHTML = items.map((x) => `
-        <li>
-          <span>${escapeHtml(x.name)}${x.branch ? ` (${escapeHtml(x.branch)})` : ""}</span>
-          <span class="muted">★ ${x.rating ?? "—"}</span>
-        </li>
-      `).join("");
-    }
-
-    function setLlmBadgeIdle() {
-      const badge = document.getElementById("llm-status");
-      if (!badge) return;
-      badge.classList.remove("llm-on", "llm-off");
-      badge.classList.add("llm-unknown");
-      badge.textContent = "Idle";
-    }
-
-    function setLlmBadgeLoading() {
-      const badge = document.getElementById("llm-status");
-      if (!badge) return;
-      badge.classList.remove("llm-on", "llm-off");
-      badge.classList.add("llm-unknown");
-      badge.textContent = "…";
-    }
-
-    function setLlmStatus(res) {
-      const badge = document.getElementById("llm-status");
-      if (!badge) {
-        return;
-      }
-      badge.classList.remove("llm-on", "llm-off", "llm-unknown");
-      if (res && res.used_llm === true) {
-        badge.textContent = "ON";
-        badge.classList.add("llm-on");
-        return;
-      }
-      if (res && res.used_llm === false) {
-        const reason = res.fallback_reason ? ` (${res.fallback_reason})` : "";
-        badge.textContent = `OFF${reason}`;
-        badge.classList.add("llm-off");
-        return;
-      }
-      badge.textContent = "Idle";
-      badge.classList.add("llm-unknown");
-    }
 
     document.getElementById("f").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -368,26 +221,24 @@
       const body = {
         city: f.city.value.trim() || null,
         cuisine_query: f.cuisine_query.value.trim() || null,
-        additional_preferences: f.additional_preferences.value.trim() || null,
         min_rating: f.min_rating.value === "" ? null : Number(f.min_rating.value),
         budget_band: f.budget_band.value || null,
         top_k: Number(f.top_k.value || 5),
         llm_candidate_cap: Number(f.llm_candidate_cap.value || 250),
       };
       const btn = document.getElementById("go");
-      const status = document.getElementById("status-card");
       const meta = document.getElementById("meta");
       const summary = document.getElementById("summary");
       const err = document.getElementById("err");
       const empty = document.getElementById("empty");
       const list = document.getElementById("list");
 
-      show(status, true);
-      err.classList.add("hidden");
-      empty.classList.add("hidden");
+      show(err, false);
+      show(empty, false);
+      show(meta, true);
+      show(summary, false);
       list.innerHTML = "";
-      summary.classList.add("hidden");
-      setLlmBadgeLoading();
+      setHdrLlmLoading();
       meta.textContent = "Working…";
       btn.disabled = true;
 
@@ -400,62 +251,44 @@
         const j = await r.json();
         if (!j.ok && j.error) {
           err.textContent = j.error;
-          err.classList.remove("hidden");
-          setLlmBadgeIdle();
+          show(err, true);
+          setHdrLlmIdle();
           meta.textContent = "";
           return;
         }
         meta.textContent = `Matched ${j.matched_count} rows · sent ${j.capped_count} to model`;
         if (j.message) {
-          setLlmStatus(j.result || null);
+          setHdrLlmFromResult(j.result || null);
           empty.textContent = j.message;
-          empty.classList.remove("hidden");
+          show(empty, true);
           return;
         }
         const res = j.result || {};
-        setLlmStatus(res);
+        setHdrLlmFromResult(res);
         if (res.summary) {
           summary.textContent = res.summary;
-          summary.classList.remove("hidden");
+          show(summary, true);
         }
         const picks = res.picks || [];
         if (!picks.length) {
-          empty.classList.remove("hidden");
+          show(empty, true);
+          empty.textContent = "No picks returned.";
           return;
         }
-        list.innerHTML = picks.map(p => `
+        list.innerHTML = picks.map((p) => `
           <li class="pick">
-            <div class="pick-body">
-              <div class="pick-top">
-                <span class="rank-label">RANK #${p.rank}</span>
-                <span class="cost-label">COST FOR TWO ₹${p.cost_for_two_inr ?? "—"}</span>
-              </div>
-              <div class="title">${escapeHtml(p.name)}${p.branch ? ` (${escapeHtml(p.branch)})` : ""}</div>
-              <div class="meta2">${escapeHtml(p.cuisine)} · ★ ${p.rating ?? "—"}</div>
-              <div class="insight">AI INSIGHT</div>
-              <p class="why">${escapeHtml(p.explanation)}</p>
-              <div class="pick-actions">
-                <button
-                  type="button"
-                  class="btn mini-btn"
-                  data-shortlist="${encodeURIComponent(JSON.stringify({
-                    restaurant_id: p.restaurant_id,
-                    name: p.name,
-                    branch: p.branch || null,
-                    rating: p.rating ?? null
-                  }))}"
-                >
-                  ${isShortlisted(p.restaurant_id) ? "Remove Shortlist" : "Add to Shortlist"}
-                </button>
-              </div>
+            <div class="pick-top">
+              <span class="rank">#${p.rank}</span>
+              <span class="title">${escapeHtml(p.name)}${p.branch ? ` (${escapeHtml(p.branch)})` : ""}</span>
             </div>
+            <div class="meta2">${escapeHtml(p.cuisine)} · rating ${p.rating ?? "—"} · cost ${p.cost_for_two_inr ?? "—"} INR (two)</div>
+            <p class="why">${escapeHtml(p.explanation)}</p>
           </li>
         `).join("");
-        bindShortlistButtons();
       } catch (x) {
         err.textContent = String(x);
-        err.classList.remove("hidden");
-        setLlmBadgeIdle();
+        show(err, true);
+        setHdrLlmIdle();
         meta.textContent = "";
       } finally {
         btn.disabled = false;
@@ -469,25 +302,6 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
-    }
-
-    function bindShortlistButtons() {
-      const buttons = document.querySelectorAll("[data-shortlist]");
-      for (const btn of buttons) {
-        btn.addEventListener("click", () => {
-          try {
-            const payload = JSON.parse(
-              decodeURIComponent(btn.getAttribute("data-shortlist") || "")
-            );
-            toggleShortlist(payload);
-            btn.textContent = isShortlisted(payload.restaurant_id)
-              ? "Remove Shortlist"
-              : "Add to Shortlist";
-          } catch {
-            // no-op
-          }
-        });
-      }
     }
   </script>
 </body>

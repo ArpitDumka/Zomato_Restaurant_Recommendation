@@ -41,7 +41,7 @@ The API **streams** the Hugging Face split (no second full copy of raw dicts). O
 5. [ ] **Deploy**, then open **Settings → Networking → Generate Domain** (or attach your domain). Copy the **HTTPS** URL (**no trailing slash**).
 6. [ ] Smoke test: `https://<your-railway-host>/api/health` → JSON with `"ok": true`.
 
-**Note:** `https://<host>/` on Railway still serves the Phase 6 Jinja UI from the same FastAPI process. Vercel is only for the Next.js client.
+**Note:** `https://<host>/` on Railway serves a **minimal** Phase 6 UI (`minimal.css`) aligned with the Next.js app layout. **[Vercel](https://vercel.com/)** serves the **SpiceRoute** hub UI (same features: filters, recommendations, shortlist in-browser). Both call the same API.
 
 ---
 

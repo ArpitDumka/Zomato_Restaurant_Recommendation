@@ -19,6 +19,7 @@ export type FilterOptionsResponse =
 export type RecommendRequestBody = {
   city: string | null;
   cuisine_query: string | null;
+  additional_preferences?: string | null;
   min_rating: number | null;
   budget_band: BudgetBand | null;
   top_k: number;

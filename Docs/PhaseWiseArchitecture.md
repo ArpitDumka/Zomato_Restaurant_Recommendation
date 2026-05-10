@@ -44,7 +44,7 @@ so the product runs on a **single URL/port** in normal usage.
 ```mermaid
 flowchart LR
   subgraph Frontend["Frontend (browser)"]
-    HTML["index.html + style.css"]
+    HTML["index.html + minimal.css (Railway)"]
     JS["Vanilla JS fetch"]
     HTML --> JS
   end
@@ -189,7 +189,8 @@ flowchart TD
 **Delivered:** [`phase6/`](../phase6/README.md)
 - **Backend:** package `zomato_surface` — FastAPI app, `service`, `catalog`, `filter_options`, `api_schemas`
 - **HTTP:** `/`, `/static/*`, `/api/health`, `/api/filter-options`, `/api/recommend`, `/docs`
-- **Frontend:** Jinja template + static CSS + inline vanilla JS (dropdowns, LLM status badge, text-first results)
+- **Frontend (Railway `/`):** Jinja + `minimal.css` + inline JS — Next.js-style layout (matches Vercel light UI)
+- **Frontend (Vercel):** Next.js **SpiceRoute** hub in [`frontend-next/`](../frontend-next/) (`spiceroute.css`, shortlist, full studio)
 - Shared in-memory catalog for filter-options and recommend
 - Input constraints: `top_k` 1–5, `llm_candidate_cap` 200–300
 
@@ -207,7 +208,7 @@ flowchart TD
 - **CORS:** API reads **`CORS_ORIGINS`** (comma-separated) and optional **`CORS_ORIGIN_REGEX`** (e.g. `*.vercel.app`) — see Deployment doc
 - **Secrets:** `OPENAI_API_KEY` / **`GROQ_API_KEY`** / optional **`HF_TOKEN`** in Railway variables (same semantics as local `phase6/.env`)
 
-**Outcome:** split deployment while the in-repo Phase 6 Jinja UI remains available on the same API host at `/`.
+**Outcome:** split deployment — Railway `/` = minimal Jinja UI; Vercel = SpiceRoute Next.js UI; both use the same JSON APIs.
 
 ---
 

@@ -36,7 +36,8 @@ Base URL: **`NEXT_PUBLIC_API_BASE_URL`** in `.env.local` (local) or Vercel proje
 
 ## What this app includes
 
-- Preference form (dropdowns from filter-options)
-- LLM status badge
-- Result cards (rank, name, cuisine, rating, cost, explanation)
+- **SpiceRoute Select** UI (top bar, hero, Preference Studio, recommendation board, shortlist in `localStorage`)
+- LLM pill in the header
 - Loading, empty, and error states
+
+The **Railway** root URL uses a lighter **Next.js-style** single-column UI; deploy this folder to **Vercel** for the full SpiceRoute experience.

@@ -1,3 +1,4 @@
+/* Next.js-style UI (matches Vercel frontend-next theme) */
 :root {
   --bg: #0c1017;
   --card: #151b26;
@@ -77,7 +78,8 @@ label {
   font-size: 0.85rem;
   color: var(--muted);
 }
-select {
+select,
+input[type="text"] {
   padding: 0.45rem 0.55rem;
   border-radius: 8px;
   border: 1px solid var(--line);
