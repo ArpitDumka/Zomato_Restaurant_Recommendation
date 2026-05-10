@@ -1,7 +1,10 @@
 """Canonical record and dedupe tests."""
 
 from zomato_canonical.normalize import (
+    RawFilterScanAcc,
     dedupe_restaurant_records,
+    merge_raw_row_into_filter_scan,
+    merge_record_into_filter_scan,
     normalize_raw_row,
     stable_restaurant_id,
 )
@@ -41,6 +44,28 @@ def test_normalize_raw_row_basic() -> None:
 def test_normalize_drops_empty_name() -> None:
     assert normalize_raw_row(_minimal_raw(name="  ")) is None
     assert normalize_raw_row(_minimal_raw(name="")) is None
+
+
+def test_filter_scan_raw_matches_record_merge() -> None:
+    raw = _minimal_raw()
+    acc_raw = RawFilterScanAcc()
+    merge_raw_row_into_filter_scan(raw, acc_raw)
+    rec = normalize_raw_row(raw)
+    assert rec is not None
+    acc_rec = RawFilterScanAcc()
+    merge_record_into_filter_scan(rec, acc_rec)
+    assert acc_raw.cities == acc_rec.cities
+    assert acc_raw.cuisines == acc_rec.cuisines
+    assert acc_raw.ratings == acc_rec.ratings
+    assert acc_raw.bands == acc_rec.bands
+    assert acc_raw.cost_min == acc_rec.cost_min
+    assert acc_raw.cost_max == acc_rec.cost_max
+
+
+def test_filter_scan_skips_empty_name_like_normalize() -> None:
+    acc = RawFilterScanAcc()
+    merge_raw_row_into_filter_scan(_minimal_raw(name=""), acc)
+    assert acc.cities == set()
 
 
 def test_stable_id_hash_without_url() -> None:

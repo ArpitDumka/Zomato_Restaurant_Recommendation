@@ -234,7 +234,7 @@ phase6 (surface)
 - **Live LLM (backend → provider):** `OPENAI_API_KEY` and/or **`GROQ_API_KEY`** (see `zomato_llm.config`); when provider limits or key issues occur, the app returns smart local fallback explanations
 - **Optional for better HF rate limits:** `HF_TOKEN`
 - **Dataset scope note:** current source dataset values for `listed_in(city)` are predominantly Bangalore localities.
-- **Low memory:** catalog uses **streaming** ingest; on **Railway** an automatic default cap applies unless **`ZOMATO_FULL_CATALOG`** or **`ZOMATO_MAX_CATALOG_ROWS`** is set (see [`Deployment.md`](./Deployment.md)).
+- **Low memory:** catalog uses **streaming** ingest; on **Railway** an automatic default cap applies unless **`ZOMATO_FULL_CATALOG`** or **`ZOMATO_MAX_CATALOG_ROWS`** is set (see [`Deployment.md`](./Deployment.md)). **Filter dropdowns** (cities, cuisines, etc.) are built from a **full pass** over the streamed split; only **normalized rows kept in RAM** are capped, so the UI shows all distincts while recommendations search the capped subset (rare empty match if a city appears only after the cap).
 - **Vercel UX:** while **`POST /api/recommend`** is in flight, the recommendation board shows a **donut spinner** overlay (`SpiceResultBoard` + `spiceroute.css`).
 
 ## Final phase summary

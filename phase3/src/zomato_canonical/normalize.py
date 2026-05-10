@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import re
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 from zomato_canonical.model import RestaurantRecord
@@ -109,6 +110,77 @@ def normalize_raw_row(row: Mapping[str, Any]) -> RestaurantRecord | None:
         rest_type=_optional_str(row.get(COL_REST_TYPE)),
         online_order=_optional_str(row.get(COL_ONLINE)),
         book_table=_optional_str(row.get(COL_BOOK)),
+    )
+
+
+@dataclass
+class RawFilterScanAcc:
+    """Mutable accumulators for filter distincts while streaming the full HF split."""
+
+    cities: set[str] = field(default_factory=set)
+    cuisines: set[str] = field(default_factory=set)
+    ratings: set[float] = field(default_factory=set)
+    bands: set[str] = field(default_factory=set)
+    cost_min: int | None = None
+    cost_max: int | None = None
+
+
+def _merge_parsed_into_filter_scan(
+    acc: RawFilterScanAcc,
+    *,
+    city_listed: str,
+    cuisines_tokens: tuple[str, ...],
+    rating: float | None,
+    cost_inr: int | None,
+) -> None:
+    c = city_listed.strip()
+    if c:
+        acc.cities.add(c)
+    for tok in cuisines_tokens:
+        t = tok.strip()
+        if t:
+            acc.cuisines.add(t)
+    if rating is not None:
+        acc.ratings.add(round(rating, 1))
+    acc.bands.add(cost_to_budget_band(cost_inr))
+    if cost_inr is not None:
+        acc.cost_min = cost_inr if acc.cost_min is None else min(acc.cost_min, cost_inr)
+        acc.cost_max = cost_inr if acc.cost_max is None else max(acc.cost_max, cost_inr)
+
+
+def merge_record_into_filter_scan(rec: RestaurantRecord, acc: RawFilterScanAcc) -> None:
+    """Update filter accumulators from ``rec`` (aligns with normalize_raw_row)."""
+    _merge_parsed_into_filter_scan(
+        acc,
+        city_listed=rec.city_listed,
+        cuisines_tokens=rec.cuisines_tokens,
+        rating=rec.rating,
+        cost_inr=rec.cost_for_two_inr,
+    )
+
+
+def merge_raw_row_into_filter_scan(
+    row: Mapping[str, Any],
+    acc: RawFilterScanAcc,
+) -> None:
+    """Merge raw row into filter accumulators without building RestaurantRecord.
+
+    Skips rows normalize_raw_row would drop (empty name).
+    """
+    name = _clean_str(row.get(COL_NAME))
+    if not name:
+        return
+    city_listed = _clean_str(row.get(COL_CITY))
+    cuisines_display = _clean_str(row.get(COL_CUISINES))
+    cost_inr = parse_cost_inr(row.get(COL_COST))
+    rating = parse_rating(row.get(COL_RATE))
+    tokens = cuisines_tokens_from_display(cuisines_display)
+    _merge_parsed_into_filter_scan(
+        acc,
+        city_listed=city_listed,
+        cuisines_tokens=tokens,
+        rating=rating,
+        cost_inr=cost_inr,
     )
 
 

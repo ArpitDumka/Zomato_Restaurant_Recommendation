@@ -6,7 +6,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from zomato_canonical import RestaurantRecord
+from zomato_canonical import RawFilterScanAcc, RestaurantRecord
 from zomato_canonical.policy import LOW_MAX_INR, MEDIUM_MAX_INR
 
 logger = logging.getLogger(__name__)
@@ -91,6 +91,45 @@ def build_filter_snapshot(
         cost_for_two_inr_min=cost_min,
         cost_for_two_inr_max=cost_max,
         normalized_row_count=n,
+        scan_seconds=round(scan_seconds, 3),
+    )
+
+
+def filter_snapshot_from_full_scan_accumulator(
+    acc: RawFilterScanAcc,
+    *,
+    normalized_row_count: int,
+    scan_seconds: float,
+) -> FilterOptionsSnapshot:
+    """
+    Build dropdown snapshot from a scan over **all** raw rows.
+
+    ``normalized_row_count`` is the in-memory catalog size (may be capped); distincts
+    reflect the full stream passed into ``acc``.
+    """
+    cities_sorted = tuple(sorted(acc.cities, key=str.casefold))
+    cuisines_sorted = tuple(sorted(acc.cuisines, key=str.casefold))
+    ratings_sorted = tuple(sorted(acc.ratings))
+    bands_sorted = tuple(b for b in _BUDGET_ORDER if b in acc.bands)
+
+    logger.info(
+        "filter snapshot (full scan): normalized_stored=%s cities=%s cuisines=%s "
+        "ratings=%s bands=%s",
+        normalized_row_count,
+        len(cities_sorted),
+        len(cuisines_sorted),
+        len(ratings_sorted),
+        len(bands_sorted),
+    )
+
+    return FilterOptionsSnapshot(
+        cities=cities_sorted,
+        cuisines=cuisines_sorted,
+        min_ratings=ratings_sorted,
+        budget_bands=bands_sorted,
+        cost_for_two_inr_min=acc.cost_min,
+        cost_for_two_inr_max=acc.cost_max,
+        normalized_row_count=normalized_row_count,
         scan_seconds=round(scan_seconds, 3),
     )
 

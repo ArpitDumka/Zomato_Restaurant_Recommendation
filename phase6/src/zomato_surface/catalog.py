@@ -10,10 +10,19 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from zomato_canonical import RestaurantRecord, normalize_raw_row
+from zomato_canonical import (
+    RawFilterScanAcc,
+    RestaurantRecord,
+    merge_raw_row_into_filter_scan,
+    merge_record_into_filter_scan,
+    normalize_raw_row,
+)
 from zomato_raw_ingest import iter_raw_rows
 
-from zomato_surface.filter_options import FilterOptionsSnapshot, build_filter_snapshot
+from zomato_surface.filter_options import (
+    FilterOptionsSnapshot,
+    filter_snapshot_from_full_scan_accumulator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -101,24 +110,34 @@ def get_catalog(*, force_refresh: bool = False) -> CatalogBundle:
         cap, cap_reason = _catalog_row_cap()
         recs: list[RestaurantRecord] = []
         raw_seen = 0
-        # Stream rows from Hugging Face (no second full copy as a Python list of dicts).
+        scan_acc = RawFilterScanAcc()
+        # One stream: all-row filter distincts; normalize only until memory cap.
         for raw in iter_raw_rows(streaming=True):
             raw_seen += 1
+            at_cap = cap is not None and len(recs) >= cap
+            if at_cap:
+                merge_raw_row_into_filter_scan(raw, scan_acc)
+                continue
             rec = normalize_raw_row(raw)
             if rec is None:
                 continue
+            merge_record_into_filter_scan(rec, scan_acc)
             recs.append(rec)
             if cap is not None and len(recs) >= cap:
                 logger.warning(
-                    "catalog stopped at %s normalized rows (cap=%s, reason=%s); "
-                    "subset only; ZOMATO_FULL_CATALOG=1 for full ~52k with enough RAM",
+                    "catalog normalized rows capped at %s (cap=%s, reason=%s); "
+                    "filter dropdowns still reflect full streamed split; "
+                    "ZOMATO_FULL_CATALOG=1 for full ~52k in memory",
                     len(recs),
                     cap,
                     cap_reason,
                 )
-                break
         elapsed = time.perf_counter() - t0
-        snapshot = build_filter_snapshot(recs, scan_seconds=round(elapsed, 3))
+        snapshot = filter_snapshot_from_full_scan_accumulator(
+            scan_acc,
+            normalized_row_count=len(recs),
+            scan_seconds=round(elapsed, 3),
+        )
         _bundle = CatalogBundle(
             records=tuple(recs),
             filter_snapshot=snapshot,
