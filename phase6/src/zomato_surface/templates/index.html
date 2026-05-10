@@ -165,9 +165,23 @@
       meta.textContent = "Loading filter options (full dataset scan on first request)…";
       try {
         const r = await fetch("/api/filter-options");
-        const d = await r.json();
+        const text = await r.text();
+        let d = {};
+        try {
+          d = text ? JSON.parse(text) : {};
+        } catch {
+          throw new Error(
+            (text && text.slice(0, 280)) || r.statusText || "Non-JSON response from /api/filter-options",
+          );
+        }
         if (!r.ok || !d.ok) {
-          throw new Error(d.detail || d.error || r.statusText || "filter-options failed");
+          const detail = d.detail;
+          const detailMsg = Array.isArray(detail)
+            ? detail.map((x) => x.msg || x).join("; ")
+            : detail;
+          throw new Error(
+            d.error || detailMsg || r.statusText || "filter-options failed",
+          );
         }
         fillSelect(city, d.cities, "Any city", (x) => x, (x) => x);
         fillSelect(

@@ -32,9 +32,11 @@ Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so th
 | `HF_TOKEN` | Optional; Hugging Face Hub |
 | `CORS_ORIGINS` | Optional; comma-separated origins, e.g. `https://your-app.vercel.app` |
 | `CORS_ORIGIN_REGEX` | Recommended for Vercel: `https://[^/]+\.vercel\.app$` (all `*.vercel.app` hosts) |
-| `ZOMATO_MAX_CATALOG_ROWS` | Optional; cap in-memory rows (e.g. `40000`) on **small** instances; omit for full ~52k rows when RAM allows |
+| `ZOMATO_MAX_CATALOG_ROWS` | Optional; explicit cap (e.g. `40000`). On **Railway**, if unset, the app defaults to **`ZOMATO_RAILWAY_DEFAULT_CAP`** (default **25000**) to avoid OOM on small plans |
+| `ZOMATO_RAILWAY_DEFAULT_CAP` | Optional; overrides the Railway-only default cap (min 1000, max 500000) |
+| `ZOMATO_FULL_CATALOG` | Set to `1` on a **large** Railway instance to load the full ~52k rows (no cap) |
 
-The API **streams** the Hugging Face split (no second full copy of raw dicts). If the service runs out of memory, lower **`ZOMATO_MAX_CATALOG_ROWS`** or choose a plan with more RAM.
+The API **streams** the Hugging Face split (no second full copy of raw dicts). On Railway, the automatic cap prevents most OOMs during catalog load; raise RAM and set **`ZOMATO_FULL_CATALOG=1`** (or a higher **`ZOMATO_MAX_CATALOG_ROWS`**) when you need the full dataset.
 
 5. [ ] **Deploy**, then open **Settings → Networking → Generate Domain** (or attach your domain). Copy the **HTTPS** URL (**no trailing slash**).
 6. [ ] Smoke test: `https://<your-railway-host>/api/health` → JSON with `"ok": true`.
