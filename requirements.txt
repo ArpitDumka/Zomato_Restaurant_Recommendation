@@ -1,4 +1,4 @@
-# Production / Render: install all phase packages from repo root (paths relative to this file).
+# Production (e.g. Railway): install all phase packages from repo root (paths relative to this file).
 -e ./phase2
 -e ./phase3
 -e ./phase4

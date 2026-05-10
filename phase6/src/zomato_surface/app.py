@@ -25,7 +25,7 @@ _BASE = Path(__file__).resolve().parent
 
 
 def _cors_allow_origins() -> list[str]:
-    """Local Next.js dev plus optional production origins (Render + Vercel)."""
+    """Local Next.js dev plus optional production origins (Railway + Vercel)."""
     base = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -50,7 +50,7 @@ def create_app() -> FastAPI:
         version=__version__,
     )
     # Next.js on :3000 locally; set CORS_ORIGINS (comma-separated) and optional
-    # CORS_ORIGIN_REGEX on Render for Vercel (see Docs/Deployment.md).
+    # CORS_ORIGIN_REGEX / CORS_ORIGINS on the API host for Vercel (see Docs/Deployment.md).
     _cors_kw: dict = {
         "allow_origins": _cors_allow_origins(),
         "allow_credentials": False,

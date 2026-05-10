@@ -26,7 +26,7 @@ function assertSensibleApiBase(): void {
     base.includes("127.0.0.1") || base.includes("localhost");
   if (looksLikeVercel && apiIsLocal) {
     throw new Error(
-      "NEXT_PUBLIC_API_BASE_URL is missing or still localhost. In Vercel → Settings → Environment Variables, set it to your Render API URL (https://…, no trailing slash), then redeploy.",
+      "NEXT_PUBLIC_API_BASE_URL is missing or still localhost. In Vercel → Settings → Environment Variables, set it to your Railway API URL (https://…, no trailing slash), then redeploy.",
     );
   }
 }
@@ -35,7 +35,7 @@ async function readJsonBody<T>(r: Response, context: string): Promise<T> {
   const text = await r.text();
   if (!text.trim()) {
     throw new Error(
-      `${context}: empty response (HTTP ${r.status}). If the API is on Render free tier, wait for cold start, open the API URL once, or check Render logs.`,
+      `${context}: empty response (HTTP ${r.status}). Wait for the API to finish starting, open the API /api/health URL once, or check hosting logs.`,
     );
   }
   try {

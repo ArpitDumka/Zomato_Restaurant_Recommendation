@@ -13,7 +13,7 @@ AI-assisted restaurant discovery using the [ManikaSaini/zomato-restaurant-recomm
 | **4** | Done — filters + cap (`zomato-filter`) | `pip install -e ./phase3` then `pip install -e ./phase4` (see [phase4/README.md](phase4/README.md)) |
 | **5** | Done — LLM layer (`zomato-llm`) | After phases 3–4: `pip install -e ./phase5` + `OPENAI_API_KEY` ([phase5/README.md](phase5/README.md)) |
 | **6** | Done — product UI/API (`zomato-surface`) | Install phases 2–5 then `pip install -e ./phase6` ([phase6/README.md](phase6/README.md)) |
-| **Deploy** | Optional — API on **Render**, Next.js on **Vercel** (local: **8765** API, **3000** Next) | [Docs/Deployment.md](Docs/Deployment.md), [`render.yaml`](render.yaml), [`frontend-next/vercel.json`](frontend-next/vercel.json) |
+| **Deploy** | Optional — API on **Railway**, Next.js on **Vercel** (local: **8765** API, **3000** Next) | [Docs/Deployment.md](Docs/Deployment.md), [`railway.toml`](railway.toml), [`frontend-next/vercel.json`](frontend-next/vercel.json) |
 
 **Full pipeline app (single URL, Phase 6)** — filters, cap, grounded LLM top-K (set API key for real explanations):
 
@@ -103,4 +103,4 @@ ruff check src tests
 - [Phase 4 deliverables](phase4/README.md)
 - [Phase 5 deliverables](phase5/README.md)
 - [Phase 6 deliverables](phase6/README.md)
-- [Deployment — Render + Vercel, local 3000 + 8765](Docs/Deployment.md)
+- [Deployment — Railway + Vercel, local 3000 + 8765](Docs/Deployment.md)

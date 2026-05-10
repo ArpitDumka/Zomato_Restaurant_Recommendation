@@ -23,7 +23,7 @@ _bundle: CatalogBundle | None = None
 
 def _catalog_row_cap() -> int | None:
     """
-    Optional cap for low-RAM hosts (e.g. Render free tier ~512MB).
+    Optional cap for low-RAM hosts (e.g. small cloud instances).
 
     Set ``ZOMATO_MAX_CATALOG_ROWS`` to a positive int to load at most that many
     normalized rows. Omit or empty for full split (~52k rows).

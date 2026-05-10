@@ -1,4 +1,4 @@
-# Phase-wise architecture (Phases 0–6 + optional Render/Vercel deploy)
+# Phase-wise architecture (Phases 0–6 + optional Railway/Vercel deploy)
 
 Companion to [ProblemStatement.md](./ProblemStatement.md).  
 This file now reflects the **implemented system**, not a forward roadmap.  
@@ -67,14 +67,14 @@ flowchart LR
   P3 --> P4["Phase 4<br/>Deterministic filter/rank"]
   P4 --> P5["Phase 5<br/>LLM rank + explanation"]
   P5 --> P6["Phase 6<br/>Backend (FastAPI) + frontend (HTML/JS)"]
-  P6 --> P7["Deploy (optional)<br/>Render API + Vercel Next.js"]
+  P6 --> P7["Deploy (optional)<br/>Railway API + Vercel Next.js"]
 ```
 
 ## End-to-end runtime architecture (current)
 
 ```mermaid
 flowchart TD
-  HF["Hugging Face dataset<br/>ManikaSaini/zomato-restaurant-recommendation"] --> RI["Phase 2: load_materialized_split()"]
+  HF["Hugging Face dataset<br/>ManikaSaini/zomato-restaurant-recommendation"] --> RI["Phase 2: HF split (streamed into catalog)"]
   RI --> NM["Phase 3: normalize_raw_row() -> RestaurantRecord"]
   NM --> CAT["Phase 6 catalog cache<br/>(in-memory full normalized split)"]
   CAT --> OPT["/api/filter-options<br/>cities/cuisines/ratings/budgets"]
@@ -197,17 +197,17 @@ flowchart TD
 
 ---
 
-## Production deployment (Render + Vercel)
+## Production deployment (Railway + Vercel)
 
 **Objective:** host the **FastAPI** service separately from the optional **Next.js** client.
 
-**Delivered:** [`render.yaml`](../render.yaml) (Render Blueprint) + [`frontend-next/vercel.json`](../frontend-next/vercel.json) + [`Docs/Deployment.md`](./Deployment.md)  
-- **Render:** `pip install -r requirements.txt` (editable phase installs) + `uvicorn zomato_surface.app:create_app --factory` on `$PORT`; health check `/api/health`
-- **Vercel:** project **root directory** = `frontend-next`; `NEXT_PUBLIC_API_BASE_URL` points at the Render service URL
-- **CORS:** backend reads **`CORS_ORIGINS`** (comma-separated) and optional **`CORS_ORIGIN_REGEX`** (e.g. Vercel previews) — see Deployment doc
-- **Secrets:** `OPENAI_API_KEY` / **`GROQ_API_KEY`** / optional **`HF_TOKEN`** in the Render environment (same semantics as local `phase6/.env`)
+**Delivered:** [`railway.toml`](../railway.toml) + [`frontend-next/vercel.json`](../frontend-next/vercel.json) + [`Docs/Deployment.md`](./Deployment.md)  
+- **Railway:** `pip install -r requirements.txt` (editable phase installs) + `uvicorn zomato_surface.app:create_app --factory` on **`$PORT`**; health check `/api/health` (see `railway.toml`)
+- **Vercel:** project **root directory** = `frontend-next`; `NEXT_PUBLIC_API_BASE_URL` points at the Railway public URL
+- **CORS:** API reads **`CORS_ORIGINS`** (comma-separated) and optional **`CORS_ORIGIN_REGEX`** (e.g. `*.vercel.app`) — see Deployment doc
+- **Secrets:** `OPENAI_API_KEY` / **`GROQ_API_KEY`** / optional **`HF_TOKEN`** in Railway variables (same semantics as local `phase6/.env`)
 
-**Outcome:** split deployment while the in-repo Phase 6 Jinja UI remains available on the same Render URL at `/`.
+**Outcome:** split deployment while the in-repo Phase 6 Jinja UI remains available on the same API host at `/`.
 
 ---
 
@@ -226,12 +226,12 @@ phase6 (surface)
 - **Primary run path (single-port mode):** `.\run.ps1 -Surface`
 - **Single canonical URL:** `http://127.0.0.1:8765/` (UI + API from same process)
 - **Split stack (local):** Phase 6 API on `:8765` + `frontend-next` on `:3000` with `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8765`
-- **Split stack (production):** see [`Deployment.md`](./Deployment.md) — Render + Vercel; local dev **Next :3000** + **API :8765**
+- **Split stack (production):** see [`Deployment.md`](./Deployment.md) — Railway + Vercel; local dev **Next :3000** + **API :8765**
 - **Environment loading:** `run.ps1 -Surface` loads `phase5/.env` then **`phase6/.env`** (phase6 overrides)
 - **Live LLM (backend → provider):** `OPENAI_API_KEY` and/or **`GROQ_API_KEY`** (see `zomato_llm.config`); when provider limits or key issues occur, the app returns smart local fallback explanations
 - **Optional for better HF rate limits:** `HF_TOKEN`
 - **Dataset scope note:** current source dataset values for `listed_in(city)` are predominantly Bangalore localities.
-- **Low memory (e.g. Render 512MB):** catalog uses **streaming** ingest; optional **`ZOMATO_MAX_CATALOG_ROWS`** caps in-memory rows (see [`Deployment.md`](./Deployment.md)).
+- **Low memory:** catalog uses **streaming** ingest; optional **`ZOMATO_MAX_CATALOG_ROWS`** caps in-memory rows (see [`Deployment.md`](./Deployment.md)).
 
 ## Final phase summary
 
@@ -244,4 +244,4 @@ phase6 (surface)
 | 4 | Deterministic relevance | Filter + shortlist ranking |
 | 5 | Language reasoning | Grounded LLM rank/explain + fallback |
 | 6 | Product delivery | **Backend** (FastAPI) + **frontend** (HTML/CSS/JS) + orchestration |
-| — | Production (optional) | **Render** (API + same-origin UI) + **Vercel** (Next.js) — [`Deployment.md`](./Deployment.md) |
+| — | Production (optional) | **Railway** (API + same-origin UI) + **Vercel** (Next.js) — [`Deployment.md`](./Deployment.md) |

@@ -1,0 +1,13 @@
+# Railway config-as-code: https://docs.railway.com/deploy/config-as-code
+# Env vars (CORS, API keys, optional ZOMATO_MAX_CATALOG_ROWS): Docs/Deployment.md
+
+[build]
+builder = "RAILPACK"
+buildCommand = "pip install --upgrade pip && pip install -r requirements.txt"
+
+[deploy]
+startCommand = "uvicorn zomato_surface.app:create_app --factory --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/api/health"
+# First request may load the HF catalog; allow several minutes before failing the check.
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
