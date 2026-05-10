@@ -5,6 +5,7 @@ __pycache__/
 venv/
 .env
 .env.*
+!frontend-next/.env.example
 
 # HF / local caches (optional; uncomment if you cache datasets under repo)
 # .cache/

@@ -192,3 +192,16 @@ select {
   color: var(--accent);
   text-decoration: none;
 }
+.footer-note {
+  display: block;
+  margin: 0.65rem auto 0;
+  max-width: 40rem;
+  line-height: 1.45;
+  font-size: 0.8rem;
+}
+.footer code {
+  font-size: 0.88em;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}

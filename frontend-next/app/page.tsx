@@ -14,6 +14,7 @@ import {
 export default function HomePage() {
   const [options, setOptions] = useState<FilterOptionsResponseOk | null>(null);
   const [loadingOptions, setLoadingOptions] = useState(true);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<RecommendResponse | null>(null);
@@ -22,10 +23,11 @@ export default function HomePage() {
     let mounted = true;
     (async () => {
       try {
+        setOptionsError(null);
         const data = await getFilterOptions();
         if (mounted) setOptions(data);
       } catch (e) {
-        if (mounted) setError(String(e));
+        if (mounted) setOptionsError(String(e));
       } finally {
         if (mounted) setLoadingOptions(false);
       }
@@ -80,6 +82,11 @@ export default function HomePage() {
       <main className="main">
         <section className="card">
           <h2>Your preferences</h2>
+          {optionsError && (
+            <p className="error" role="alert">
+              Could not load filter options: {optionsError}
+            </p>
+          )}
           <PreferencesForm
             options={options}
             loadingOptions={loadingOptions}
@@ -87,7 +94,10 @@ export default function HomePage() {
             onSubmit={submit}
           />
           <p className="hint">
-            The full Hugging Face split is loaded by backend on first request and reused.
+            The FastAPI backend (Railway in production) materializes an in-memory catalog on
+            the first request and reuses it. The row count below is whatever the server loaded
+            (hosting may cap rows on small instances — see{" "}
+            <code>Docs/Deployment.md</code>).
           </p>
           {options && (
             <p className="hint muted">
@@ -130,8 +140,13 @@ export default function HomePage() {
         </a>{" "}
         ·{" "}
         <a href={`${getApiBase()}/api/health`} target="_blank" rel="noreferrer">
-          health
+          API health
         </a>
+        <span className="footer-note">
+          {" "}
+          · Vercel: set <code>NEXT_PUBLIC_API_BASE_URL</code> to this API origin; Railway: CORS
+          for <code>*.vercel.app</code> (see repo <code>Docs/Deployment.md</code>).
+        </span>
       </footer>
     </>
   );
