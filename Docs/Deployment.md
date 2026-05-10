@@ -11,9 +11,9 @@ The Next app calls the API using **`NEXT_PUBLIC_API_BASE_URL`** (defaults to `ht
 
 **Production:** host the backend on **[Railway](https://railway.app/)** and the frontend on **[Vercel](https://vercel.com/)**. Deploy **Railway first**, copy the public API URL, then configure **Vercel**.
 
-**Repo files:** [`railway.toml`](../railway.toml), root [`requirements.txt`](../requirements.txt), [`frontend-next/vercel.json`](../frontend-next/vercel.json).
+**Repo files:** [`railway.toml`](../railway.toml), root [`requirements.txt`](../requirements.txt), [`.python-version`](../.python-version) (Python **3.11.9** for Railpack), sample env [`railway.env.example`](../railway.env.example), [`frontend-next/vercel.json`](../frontend-next/vercel.json).
 
-Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so the Vercel origin can call the API — see the env table below.
+Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so the Vercel origin can call the API — see the env table below. You can copy name/value pairs from [`railway.env.example`](../railway.env.example) into **Variables** (add **`PYTHONUNBUFFERED=1`** for readable logs).
 
 ---
 
@@ -26,6 +26,7 @@ Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so th
 
 | Variable | Purpose |
 |----------|---------|
+| `PYTHONUNBUFFERED` | Set to `1` so API logs stream in Railway (see [`railway.env.example`](../railway.env.example)) |
 | `OPENAI_API_KEY` | Optional; LLM explanations |
 | `GROQ_API_KEY` | Optional; Groq (OpenAI-compatible client in phase5) |
 | `HF_TOKEN` | Optional; Hugging Face Hub |

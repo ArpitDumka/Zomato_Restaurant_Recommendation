@@ -201,8 +201,8 @@ flowchart TD
 
 **Objective:** host the **FastAPI** service separately from the optional **Next.js** client.
 
-**Delivered:** [`railway.toml`](../railway.toml) + [`frontend-next/vercel.json`](../frontend-next/vercel.json) + [`Docs/Deployment.md`](./Deployment.md)  
-- **Railway:** `pip install -r requirements.txt` (editable phase installs) + `uvicorn zomato_surface.app:create_app --factory` on **`$PORT`**; health check `/api/health` (see `railway.toml`)
+**Delivered:** [`railway.toml`](../railway.toml) + [`railway.env.example`](../railway.env.example) + [`.python-version`](../.python-version) + [`frontend-next/vercel.json`](../frontend-next/vercel.json) + [`Docs/Deployment.md`](./Deployment.md)  
+- **Railway:** `pip install -r requirements.txt` (editable phase installs) + `uvicorn zomato_surface.app:create_app --factory` on **`$PORT`**; health check `/api/health`; Python **3.11.9** via `.python-version`; variables per Deployment / `railway.env.example`
 - **Vercel:** project **root directory** = `frontend-next`; `NEXT_PUBLIC_API_BASE_URL` points at the Railway public URL
 - **CORS:** API reads **`CORS_ORIGINS`** (comma-separated) and optional **`CORS_ORIGIN_REGEX`** (e.g. `*.vercel.app`) — see Deployment doc
 - **Secrets:** `OPENAI_API_KEY` / **`GROQ_API_KEY`** / optional **`HF_TOKEN`** in Railway variables (same semantics as local `phase6/.env`)

@@ -13,7 +13,7 @@ AI-assisted restaurant discovery using the [ManikaSaini/zomato-restaurant-recomm
 | **4** | Done — filters + cap (`zomato-filter`) | `pip install -e ./phase3` then `pip install -e ./phase4` (see [phase4/README.md](phase4/README.md)) |
 | **5** | Done — LLM layer (`zomato-llm`) | After phases 3–4: `pip install -e ./phase5` + `OPENAI_API_KEY` ([phase5/README.md](phase5/README.md)) |
 | **6** | Done — product UI/API (`zomato-surface`) | Install phases 2–5 then `pip install -e ./phase6` ([phase6/README.md](phase6/README.md)) |
-| **Deploy** | Optional — API on **Railway**, Next.js on **Vercel** (local: **8765** API, **3000** Next) | [Docs/Deployment.md](Docs/Deployment.md), [`railway.toml`](railway.toml), [`frontend-next/vercel.json`](frontend-next/vercel.json) |
+| **Deploy** | Optional — API on **Railway**, Next.js on **Vercel** (local: **8765** API, **3000** Next) | [Docs/Deployment.md](Docs/Deployment.md), [`railway.toml`](railway.toml), [`railway.env.example`](railway.env.example), [`frontend-next/vercel.json`](frontend-next/vercel.json) |
 
 **Full pipeline app (single URL, Phase 6)** — filters, cap, grounded LLM top-K (set API key for real explanations):
 
