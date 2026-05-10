@@ -9,7 +9,8 @@ builder = "RAILPACK"
 buildCommand = "pip install --upgrade pip && pip install -r requirements.txt"
 
 [deploy]
-startCommand = "uvicorn zomato_surface.app:create_app --factory --host 0.0.0.0 --port $PORT"
+# requirements.txt is PyPI-only; PYTHONPATH is set in the script (editable -e ./phase* breaks on Railway).
+startCommand = "sh scripts/start-railway.sh"
 healthcheckPath = "/api/health"
 # Seconds to wait for /api/health to return 200 after the process starts (slow networks / cold regions).
 healthcheckTimeout = 300

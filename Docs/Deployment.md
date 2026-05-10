@@ -11,7 +11,7 @@ The Next app calls the API using **`NEXT_PUBLIC_API_BASE_URL`** (defaults to `ht
 
 **Production:** host the backend on **[Railway](https://railway.app/)** and the frontend on **[Vercel](https://vercel.com/)**. Deploy **Railway first**, copy the public API URL, then configure **Vercel**.
 
-**Repo files:** [`railway.toml`](../railway.toml), root [`requirements.txt`](../requirements.txt), [`.python-version`](../.python-version) (Python **3.11.9** for Railpack), sample env [`railway.env.example`](../railway.env.example), [`frontend-next/vercel.json`](../frontend-next/vercel.json).
+**Repo files:** [`railway.toml`](../railway.toml), root [`requirements.txt`](../requirements.txt), [`scripts/start-railway.sh`](../scripts/start-railway.sh), [`.python-version`](../.python-version) (Python **3.11.9** for Railpack), sample env [`railway.env.example`](../railway.env.example), [`frontend-next/vercel.json`](../frontend-next/vercel.json).
 
 Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so the Vercel origin can call the API — see the env table below. You can copy name/value pairs from [`railway.env.example`](../railway.env.example) into **Variables** (add **`PYTHONUNBUFFERED=1`** for readable logs).
 
@@ -21,7 +21,7 @@ Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so th
 
 1. [ ] [Railway](https://railway.app/) → **New Project** → **Deploy from GitHub repo** (this repository).
 2. [ ] **Root directory:** repository root (where `requirements.txt` and `railway.toml` live).
-3. [ ] Railway will use [`railway.toml`](../railway.toml): build runs `pip install … -r requirements.txt`, start runs **uvicorn** on **`$PORT`**, health check **`/api/health`** (5 min timeout for cold catalog load).
+3. [ ] Railway will use [`railway.toml`](../railway.toml): build runs `pip install … -r requirements.txt` (PyPI deps only; no local `-e ./phase*` paths), start runs [`scripts/start-railway.sh`](../scripts/start-railway.sh) so **`PYTHONPATH`** includes all `phase*/src` trees, then **uvicorn** on **`$PORT`**. Health check **`/api/health`** (5 min timeout).
 4. [ ] **Variables** (service → **Variables**):
 
 | Variable | Purpose |

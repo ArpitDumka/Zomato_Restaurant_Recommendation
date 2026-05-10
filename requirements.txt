@@ -1,6 +1,9 @@
-# Production (e.g. Railway): install all phase packages from repo root (paths relative to this file).
--e ./phase2
--e ./phase3
--e ./phase4
--e ./phase5
--e ./phase6
+# PyPI dependencies only (Railway/Docker-safe). Phase packages live under phase*/src;
+# use scripts/start-railway.sh on Railway or set PYTHONPATH (see .devcontainer).
+datasets>=4.4.0
+huggingface_hub>=0.20.0
+openai>=1.30.0
+pydantic>=2.5.0
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+jinja2>=3.1.0

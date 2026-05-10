@@ -1,6 +1,9 @@
 {
   "name": "Python 3",
   "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
+  "containerEnv": {
+    "PYTHONPATH": "${containerWorkspaceFolder}/phase2/src:${containerWorkspaceFolder}/phase3/src:${containerWorkspaceFolder}/phase4/src:${containerWorkspaceFolder}/phase5/src:${containerWorkspaceFolder}/phase6/src"
+  },
   "customizations": {
     "codespaces": {
       "openFiles": [
