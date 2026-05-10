@@ -29,6 +29,14 @@ _BASE = Path(__file__).resolve().parent
 _log = logging.getLogger(__name__)
 
 
+def _is_railway_host() -> bool:
+    return bool(
+        os.environ.get("RAILWAY_ENVIRONMENT_ID")
+        or os.environ.get("RAILWAY_PROJECT_ID")
+        or os.environ.get("RAILWAY_SERVICE_ID")
+    )
+
+
 def _cors_allow_origins() -> list[str]:
     """Local Next.js dev plus optional production origins (Railway + Vercel)."""
     base = [
@@ -46,6 +54,40 @@ def _cors_allow_origins() -> list[str]:
             seen.add(o)
             out.append(o)
     return out
+
+
+def _cors_middleware_kwargs() -> dict:
+    """
+    CORS for browser calls (Vercel → Railway).
+
+    On Railway, if neither ``CORS_ORIGINS`` nor ``CORS_ORIGIN_REGEX`` is set, allow
+    any origin (``*``). The API does not use cookies; this fixes “Failed to fetch”
+    when env vars were missed. Set ``ZOMATO_STRICT_CORS=1`` or configure origins
+    to restrict access.
+    """
+    rx = os.environ.get("CORS_ORIGIN_REGEX", "").strip()
+    extra = os.environ.get("CORS_ORIGINS", "").strip()
+    strict = os.environ.get("ZOMATO_STRICT_CORS", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    base = {
+        "allow_credentials": False,
+        "allow_methods": ["*"],
+        "allow_headers": ["*"],
+    }
+    if _is_railway_host() and not strict and not rx and not extra:
+        _log.info(
+            "CORS: allow all origins on Railway (no CORS_* env set). "
+            "Set CORS_ORIGIN_REGEX or CORS_ORIGINS to restrict.",
+        )
+        return {**base, "allow_origins": ["*"]}
+    kw = {**base, "allow_origins": _cors_allow_origins()}
+    if rx:
+        kw["allow_origin_regex"] = rx
+    return kw
 
 
 def create_app() -> FastAPI:
@@ -70,19 +112,8 @@ def create_app() -> FastAPI:
         version=__version__,
         lifespan=lifespan,
     )
-    # Next.js on :3000 locally; set CORS_ORIGINS (comma-separated) and optional
-    # CORS_ORIGIN_REGEX / CORS_ORIGINS on the API host for Vercel
-    # (see Docs/Deployment.md).
-    _cors_kw: dict = {
-        "allow_origins": _cors_allow_origins(),
-        "allow_credentials": False,
-        "allow_methods": ["*"],
-        "allow_headers": ["*"],
-    }
-    _cors_rx = os.environ.get("CORS_ORIGIN_REGEX", "").strip()
-    if _cors_rx:
-        _cors_kw["allow_origin_regex"] = _cors_rx
-    app.add_middleware(CORSMiddleware, **_cors_kw)
+    # Next.js on :3000 locally; on Railway see _cors_middleware_kwargs().
+    app.add_middleware(CORSMiddleware, **_cors_middleware_kwargs())
     templates = Jinja2Templates(directory=str(_BASE / "templates"))
     app.mount("/static", StaticFiles(directory=str(_BASE / "static")), name="static")
 

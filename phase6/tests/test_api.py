@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 from zomato_llm.schema import LlmRankingResult, RankedPick
 
@@ -16,6 +17,32 @@ def test_health() -> None:
     r = c.get("/api/health")
     assert r.status_code == 200
     assert r.json()["ok"] is True
+
+
+def test_cors_allow_all_on_railway_without_cors_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RAILWAY_SERVICE_ID", "srv")
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+    monkeypatch.delenv("CORS_ORIGIN_REGEX", raising=False)
+    monkeypatch.delenv("ZOMATO_STRICT_CORS", raising=False)
+    c = TestClient(create_app())
+    r = c.get("/api/health", headers={"Origin": "https://app.vercel.app"})
+    assert r.status_code == 200
+    assert r.headers.get("access-control-allow-origin") == "*"
+
+
+def test_cors_strict_disables_allow_all_on_railway(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("RAILWAY_SERVICE_ID", "srv")
+    monkeypatch.setenv("ZOMATO_STRICT_CORS", "1")
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+    monkeypatch.delenv("CORS_ORIGIN_REGEX", raising=False)
+    c = TestClient(create_app())
+    r = c.get("/api/health", headers={"Origin": "https://app.vercel.app"})
+    assert r.status_code == 200
+    assert r.headers.get("access-control-allow-origin") != "*"
 
 
 def test_filter_options_mocked() -> None:

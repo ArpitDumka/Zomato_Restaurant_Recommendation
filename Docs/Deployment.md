@@ -30,8 +30,9 @@ Set **`CORS_ORIGIN_REGEX`** (and optionally **`CORS_ORIGINS`**) on Railway so th
 | `OPENAI_API_KEY` | Optional; LLM explanations |
 | `GROQ_API_KEY` | Optional; Groq (OpenAI-compatible client in phase5) |
 | `HF_TOKEN` | Optional; Hugging Face Hub |
-| `CORS_ORIGINS` | Optional; comma-separated origins, e.g. `https://your-app.vercel.app` |
-| `CORS_ORIGIN_REGEX` | Recommended for Vercel: `https://[^/]+\.vercel\.app$` (all `*.vercel.app` hosts) |
+| `CORS_ORIGINS` | Optional; comma-separated origins, e.g. `https://your-app.vercel.app`. If unset on **Railway**, the API defaults to **allow any origin** (`*`) so Vercel works without config |
+| `CORS_ORIGIN_REGEX` | Optional; e.g. `https://[^/]+\.vercel\.app$`. Setting this **or** `CORS_ORIGINS` disables the permissive Railway default |
+| `ZOMATO_STRICT_CORS` | Set **`1`** on Railway to **disable** permissive CORS when you are not setting `CORS_*` (local testing only; browsers will need explicit origins) |
 | `ZOMATO_MAX_CATALOG_ROWS` | Optional; explicit cap. On **Railway**, if unset, defaults to **`ZOMATO_RAILWAY_DEFAULT_CAP`** (default **12000**) to avoid OOM |
 | `ZOMATO_RAILWAY_DEFAULT_CAP` | Optional; overrides the Railway-only default cap (min 1000, max 500000). Raise (e.g. **20000**) if you add RAM |
 | `ZOMATO_FULL_CATALOG` | Set to `1` on a **large** Railway instance to load the full ~52k rows (no cap) |
@@ -45,7 +46,7 @@ The catalog does **one** pass over the split (normalize up to the cap, then ligh
 5. [ ] **Deploy**, then open **Settings → Networking → Generate Domain** (or attach your domain). Copy the **HTTPS** URL (**no trailing slash**).
 6. [ ] Smoke test: `https://<your-railway-host>/api/health` → JSON with `"ok": true`.
 
-**If the Vercel UI shows “Failed to fetch” for filter options:** (1) Confirm **`NEXT_PUBLIC_API_BASE_URL`** is the Railway **https** URL (no trailing slash). (2) Set **`CORS_ORIGIN_REGEX`** on Railway (see table) or add your exact Vercel origin to **`CORS_ORIGINS`**. (3) Open the Railway **`/api/health`** and **`/api/filter-options`** URLs directly; if the latter hangs, check logs (HF download / memory). The Next app retries filter-options for several minutes to cover cold starts.
+**If the Vercel UI shows “Failed to fetch” for filter options:** (1) Confirm **`NEXT_PUBLIC_API_BASE_URL`** is the Railway **https** public URL (no trailing slash) — not an internal hostname. (2) Open **`/api/health`** in the browser; if that fails, fix Railway networking / deploy. (3) CORS is **permissive by default on Railway** unless you set `CORS_ORIGINS` / `CORS_ORIGIN_REGEX` / `ZOMATO_STRICT_CORS`. (4) If **`/api/filter-options`** hangs, check logs (Hugging Face / memory); the Next app retries for several minutes.
 
 **Note:** `https://<host>/` on Railway serves a **minimal** Phase 6 UI (`minimal.css`): version line, HF/LLM pipeline copy, deploy (`NEXT_PUBLIC_API_BASE_URL` / CORS), and **Terms**. **[Vercel](https://vercel.com/)** serves the **SpiceRoute** hub (Zomato-inspired visuals, hero + pick images, **additional preferences**, shortlist, **donut loading overlay** during recommend; Privacy in footer). Both call the same API.
 
